@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Cognitive System - Information Flow Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="system-title">
+            <h1>AI Cognitive System - Information Flow Simulator</h1>
+        </div>
+
+        <svg class="connections-svg" id="connections-svg" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+            <!-- 连接线将在这里动态绘制 -->
+        </svg>
+
+        <!-- 第一层：全局时间系统 -->
+        <div class="module" id="global-time" style="top: 580px; left: 150px;">
+            <div class="module-name">Global Time System<br>Temporal Coordination</div>
+        </div>
+
+        <!-- 第二层：输入流程 -->
+        <div class="module" id="external-stimuli" style="top: 180px; left: 150px;">
+            <div class="module-name">External Stimuli<br>Information Input</div>
+        </div>
+
+        <div class="module" id="perception" style="top: 380px; left: 150px;">
+            <div class="module-name">Perception & Input<br>Sensory Processing</div>
+        </div>
+
+        <div class="module" id="ai-cognitive" style="top: 180px; left: 480px;">
+            <div class="module-name">AI Cognitive Core<br>Central Processing</div>
+        </div>
+
+        <!-- 第三层：思维核心 -->
+        <div class="module" id="thinking-core" style="top: 280px; left: 50%; transform: translateX(-50%);">
+            <div class="module-name">Thinking Core<br>Decision Making</div>
+        </div>
+
+        <!-- 第四层：处理模块群（水平排列） -->
+        <div class="module" id="personality" style="top: 380px; left: 1180px;">
+            <div class="module-name">Personality & Emotion<br>Character Traits</div>
+        </div>
+
+        <div class="module" id="skills" style="top: 510px; left: 1180px;">
+            <div class="module-name">Skills Module<br>Capability Processing</div>
+        </div>
+
+        <div class="module" id="needs" style="top: 640px; left: 1180px;">
+            <div class="module-name">Needs & Motivation<br>Drive System</div>
+        </div>
+
+        <div class="module" id="planning" style="top: 120px; left: 1180px;">
+            <div class="module-name">Planning System<br>Strategy Formation</div>
+        </div>
+
+        <div class="module" id="relationship" style="top: 250px; left: 1180px;">
+            <div class="module-name">Relationship Module<br>Social Processing</div>
+        </div>
+
+        <!-- 第五层：输出流程 -->
+        <div class="module" id="action-output" style="top: 590px; left: 1580px; transform: translateX(-50%);">
+            <div class="module-name">Action & Output<br>Response Generation</div>
+        </div>
+
+        <!-- 第六层：环境交互和记忆 -->
+        <div class="module" id="environment" style="top: 580px; left: 480px;">
+            <div class="module-name">Environment Interaction<br>External Interface</div>
+        </div>
+
+        <div class="module" id="memory" style="top: 380px; left: 480px;">
+            <div class="module-name">Memory System<br>Information Storage</div>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-title">Current Active Module</div>
+            <div class="info-content" id="current-info">
+                Click "Start Simulation" to begin information flow demonstration
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <button class="btn btn-primary" onclick="startSimulation()">Start Simulation</button>
+            <button class="btn btn-secondary" onclick="stopSimulation()">Stop Simulation</button>
+            <button class="btn btn-secondary" onclick="resetSimulation()">Reset</button>
+            <button class="btn btn-toggle" id="connections-toggle" onclick="toggleConnections()">Hide Connections</button>
+            <button class="btn btn-toggle" id="mode-toggle" onclick="toggleConnectionMode()">Switch to Orthogonal</button>
+            <button class="btn btn-secondary" id="anchor-toggle" onclick="toggleAnchorPoints()">Show Anchors</button>
+            
+            <div class="speed-control">
+                <span>Simulation Speed:</span>
+                <input type="range" class="speed-slider" min="500" max="3000" value="1500" id="speed-slider">
+            </div>
+            
+            <div class="speed-control">
+                <span>Flow Speed:</span>
+                <input type="range" class="speed-slider" min="800" max="4000" value="2000" id="flow-speed-slider">
+            </div>
+        </div>
+    </div>
+
+    <!-- 模块化JavaScript -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html> 

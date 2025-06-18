@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快速模块测试</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white;
+        }
+        .status { 
+            background: rgba(0,0,0,0.8); 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin: 10px 0; 
+            font-family: monospace;
+        }
+        .success { background: rgba(0,128,0,0.8); }
+        .error { background: rgba(255,0,0,0.8); }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <h1>🚀 快速模块测试</h1>
+    
+    <div id="status-container">
+        <div class="status">正在加载模块...</div>
+    </div>
+    
+    <div>
+        <button class="btn" id="test-btn" disabled>测试功能</button>
+        <button class="btn" onclick="location.reload()">重新加载</button>
+    </div>
+
+    <script type="module">
+        const statusContainer = document.getElementById('status-container');
+        const testBtn = document.getElementById('test-btn');
+        
+        function addStatus(message, isError = false) {
+            const div = document.createElement('div');
+            div.className = `status ${isError ? 'error' : 'success'}`;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            statusContainer.appendChild(div);
+            console.log(message);
+        }
+        
+        async function loadAndTestModules() {
+            try {
+                addStatus('开始加载模块...');
+                
+                // 逐个加载模块
+                addStatus('加载 config.js...');
+                const config = await import('./js/config.js');
+                addStatus('✅ config.js 加载成功');
+                
+                addStatus('加载 language.js...');
+                const language = await import('./js/language.js');
+                addStatus('✅ language.js 加载成功');
+                
+                addStatus('加载 connections.js...');
+                const connections = await import('./js/connections.js');
+                addStatus('✅ connections.js 加载成功');
+                
+                addStatus('加载 main.js...');
+                const main = await import('./js/main.js');
+                addStatus('✅ main.js 加载成功');
+                
+                // 测试基本功能
+                addStatus('测试配置功能...');
+                if (typeof config.debugState === 'function') {
+                    addStatus('✅ 配置模块功能正常');
+                } else {
+                    addStatus('❌ 配置模块功能异常', true);
+                }
+                
+                addStatus('测试语言功能...');
+                if (typeof language.initializeLanguageSystem === 'function') {
+                    addStatus('✅ 语言模块功能正常');
+                    
+                    // 测试语言系统初始化
+                    try {
+                        addStatus('测试语言系统初始化...');
+                        language.initializeLanguageSystem();
+                        addStatus('✅ 语言系统初始化成功');
+                    } catch (error) {
+                        addStatus('❌ 语言系统初始化失败: ' + error.message, true);
+                    }
+                } else {
+                    addStatus('❌ 语言模块功能异常', true);
+                }
+                
+                addStatus('创建全局API...');
+                window.AICognitiveSystem = main.AICognitiveSystem;
+                if (window.AICognitiveSystem) {
+                    addStatus('✅ 全局API创建成功');
+                    testBtn.disabled = false;
+                    testBtn.onclick = () => {
+                        addStatus('测试API功能...');
+                        if (typeof window.AICognitiveSystem.debugState === 'function') {
+                            const state = window.AICognitiveSystem.debugState();
+                            addStatus('✅ API功能测试成功: ' + JSON.stringify(state).substring(0, 50) + '...');
+                        } else {
+                            addStatus('❌ API功能测试失败', true);
+                        }
+                    };
+                } else {
+                    addStatus('❌ 全局API创建失败', true);
+                }
+                
+                addStatus('🎉 所有模块加载成功！系统就绪。');
+                
+            } catch (error) {
+                addStatus('❌ 模块加载失败: ' + error.message, true);
+                addStatus('详细错误: ' + error.stack, true);
+            }
+        }
+        
+        // 开始测试
+        loadAndTestModules();
+        
+    </script>
+</body>
+</html> 

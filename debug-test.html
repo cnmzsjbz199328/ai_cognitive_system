@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模块系统调试测试</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #f0f0f0;
+        }
+        .test-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #2980b9; }
+        .log { 
+            background: #2c3e50; 
+            color: #ecf0f1; 
+            padding: 10px; 
+            border-radius: 5px; 
+            font-family: monospace; 
+            font-size: 12px;
+            height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 AI认知系统 - 模块调试测试</h1>
+    
+    <div class="test-panel">
+        <h3>模块加载测试</h3>
+        <button class="btn" onclick="testModuleLoading()">测试模块加载</button>
+        <button class="btn" onclick="testSystemInit()">测试系统初始化</button>
+        <button class="btn" onclick="testBasicFunctions()">测试基本功能</button>
+        <button class="btn" onclick="clearLog()">清空日志</button>
+    </div>
+    
+    <div class="test-panel">
+        <h3>控制台日志</h3>
+        <div id="console-log" class="log">等待测试...</div>
+    </div>
+
+    <script type="module">
+        const logElement = document.getElementById('console-log');
+        
+        function addLog(message) {
+            logElement.textContent += new Date().toLocaleTimeString() + ' - ' + message + '\n';
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // 重写console.log以显示在页面上
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLog('LOG: ' + args.join(' '));
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog('ERROR: ' + args.join(' '));
+        };
+        
+        // 测试函数
+        window.testModuleLoading = async function() {
+            addLog('开始测试模块加载...');
+            
+            try {
+                addLog('尝试导入 config.js...');
+                const config = await import('./js/config.js');
+                addLog('✅ config.js 加载成功');
+                
+                addLog('尝试导入 connections.js...');
+                const connections = await import('./js/connections.js');
+                addLog('✅ connections.js 加载成功');
+                
+                addLog('尝试导入 main.js...');
+                const main = await import('./js/main.js');
+                addLog('✅ main.js 加载成功');
+                
+                addLog('🎉 所有模块加载成功！');
+                
+            } catch (error) {
+                addLog('❌ 模块加载失败: ' + error.message);
+                addLog('详细错误: ' + error.stack);
+            }
+        };
+        
+        window.testSystemInit = async function() {
+            addLog('开始测试系统初始化...');
+            
+            try {
+                const { initializeSystem, setupEventListeners } = await import('./js/main.js');
+                
+                addLog('调用 initializeSystem()...');
+                await initializeSystem();
+                
+                addLog('调用 setupEventListeners()...');
+                await setupEventListeners();
+                
+                addLog('✅ 系统初始化完成');
+                
+            } catch (error) {
+                addLog('❌ 系统初始化失败: ' + error.message);
+                addLog('详细错误: ' + error.stack);
+            }
+        };
+        
+        window.testBasicFunctions = function() {
+            addLog('测试基本功能...');
+            
+            if (window.AICognitiveSystem) {
+                addLog('✅ AICognitiveSystem 对象存在');
+                addLog('可用方法: ' + Object.keys(window.AICognitiveSystem).join(', '));
+                
+                try {
+                    if (typeof window.AICognitiveSystem.startSimulation === 'function') {
+                        addLog('✅ startSimulation 方法可用');
+                    } else {
+                        addLog('❌ startSimulation 方法不可用');
+                    }
+                } catch (e) {
+                    addLog('❌ 测试 startSimulation 时出错: ' + e.message);
+                }
+                
+            } else {
+                addLog('❌ AICognitiveSystem 对象未找到');
+            }
+        };
+        
+        window.clearLog = function() {
+            logElement.textContent = '';
+        };
+        
+        // 自动开始测试
+        addLog('调试测试页面已加载');
+        setTimeout(() => {
+            testModuleLoading();
+        }, 1000);
+        
+    </script>
+</body>
+</html> 

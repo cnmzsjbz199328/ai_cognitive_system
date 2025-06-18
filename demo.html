@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能连接线演示</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .demo-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            height: 700px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .demo-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 15;
+            pointer-events: none;
+        }
+        .demo-module {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+            border: 2px solid #3498db;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: move;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            min-width: 120px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .connection-line {
+            stroke: #3498db;
+            stroke-width: 3;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 0 4px rgba(52, 152, 219, 0.3));
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: white; margin-bottom: 30px;">🔗 智能连接线系统演示</h1>
+    
+    <div style="text-align: center; margin-bottom: 20px;">
+        <button onclick="toggleMode()">切换连接模式</button>
+        <button onclick="toggleAnchors()">显示/隐藏锚点</button>
+        <button onclick="redrawConnections()">重新绘制</button>
+    </div>
+    
+    <div class="demo-container">
+        <svg class="demo-svg" id="demo-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+        
+        <!-- 第一层：全局时间系统 -->
+        <div class="module" id="global-time" style="top: 80px; left: 50%; transform: translateX(-50%);">
+            <div class="module-name">Global Time System<br>全局时间系统</div>
+        </div>
+
+        <!-- 第二层：输入流程 -->
+        <div class="module" id="external-stimuli" style="top: 180px; left: 100px;">
+            <div class="module-name">External Stimuli<br>外部刺激</div>
+        </div>
+
+        <div class="module" id="perception" style="top: 180px; left: 350px;">
+            <div class="module-name">Perception & Input<br>感知与输入模块</div>
+        </div>
+
+        <div class="module" id="ai-cognitive" style="top: 180px; left: 600px;">
+            <div class="module-name">AI Cognitive Core<br>AI认知核心</div>
+        </div>
+
+        <!-- 第三层：思维核心 -->
+        <div class="module" id="thinking-core" style="top: 280px; left: 50%; transform: translateX(-50%);">
+            <div class="module-name">Thinking Core<br>思维核心</div>
+        </div>
+
+        <!-- 第四层：处理模块群（水平排列） -->
+        <div class="module" id="personality" style="top: 380px; left: 80px;">
+            <div class="module-name">Personality & Emotion<br>个性与情感核心</div>
+        </div>
+
+        <div class="module" id="skills" style="top: 380px; left: 280px;">
+            <div class="module-name">Skills Module<br>技能模块</div>
+        </div>
+
+        <div class="module" id="needs" style="top: 380px; left: 480px;">
+            <div class="module-name">Needs & Motivation<br>需求与动机系统</div>
+        </div>
+
+        <div class="module" id="planning" style="top: 380px; left: 680px;">
+            <div class="module-name">Planning System<br>规划系统</div>
+        </div>
+
+        <div class="module" id="relationship" style="top: 380px; left: 880px;">
+            <div class="module-name">Relationship Module<br>关系模块</div>
+        </div>
+
+        <!-- 第五层：输出流程 -->
+        <div class="module" id="action-output" style="top: 480px; left: 50%; transform: translateX(-50%);">
+            <div class="module-name">Action & Output<br>行动与输出模块</div>
+        </div>
+
+        <!-- 第六层：环境交互和记忆 -->
+        <div class="module" id="environment" style="top: 580px; left: 300px;">
+            <div class="module-name">Environment Interaction<br>环境交互模块</div>
+        </div>
+
+        <div class="module" id="memory" style="top: 580px; left: 650px;">
+            <div class="module-name">Memory System<br>记忆系统</div>
+        </div>
+    </div>
+    
+    <p style="text-align: center; color: white; margin-top: 20px;">
+        当前模式：<span id="current-mode">曲线</span> | 拖拽模块测试连接线更新
+    </p>
+
+    <script>
+        let connectionMode = 'curved';
+        let showAnchorPoints = false;
+        
+        const demoConnections = [
+            ['module-a', 'module-c'],
+            ['module-b', 'module-c'],
+            ['module-c', 'module-d'],
+            ['module-c', 'module-e'],
+            ['module-a', 'module-b']
+        ];
+        
+        function getModuleAnchorPoints(moduleId) {
+            const module = document.getElementById(moduleId);
+            if (!module) return null;
+            
+            const rect = module.getBoundingClientRect();
+            const containerRect = document.querySelector('.demo-container').getBoundingClientRect();
+            
+            const moduleRect = {
+                left: rect.left - containerRect.left,
+                top: rect.top - containerRect.top,
+                width: rect.width,
+                height: rect.height
+            };
+            
+            return {
+                top: { x: moduleRect.left + moduleRect.width / 2, y: moduleRect.top, direction: 'top' },
+                right: { x: moduleRect.left + moduleRect.width, y: moduleRect.top + moduleRect.height / 2, direction: 'right' },
+                bottom: { x: moduleRect.left + moduleRect.width / 2, y: moduleRect.top + moduleRect.height, direction: 'bottom' },
+                left: { x: moduleRect.left, y: moduleRect.top + moduleRect.height / 2, direction: 'left' }
+            };
+        }
+        
+        function selectBestAnchorPair(fromAnchors, toAnchors) {
+            let bestDistance = Infinity;
+            let bestPair = null;
+            
+            ['top', 'right', 'bottom', 'left'].forEach(fromDir => {
+                ['top', 'right', 'bottom', 'left'].forEach(toDir => {
+                    const fromAnchor = fromAnchors[fromDir];
+                    const toAnchor = toAnchors[toDir];
+                    
+                    const distance = Math.sqrt(
+                        Math.pow(fromAnchor.x - toAnchor.x, 2) + 
+                        Math.pow(fromAnchor.y - toAnchor.y, 2)
+                    );
+                    
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        bestPair = { from: fromAnchor, to: toAnchor };
+                    }
+                });
+            });
+            
+            return bestPair;
+        }
+        
+        function createCurvedPath(fromAnchor, toAnchor) {
+            const dx = toAnchor.x - fromAnchor.x;
+            const dy = toAnchor.y - fromAnchor.y;
+            const controlOffset = Math.max(Math.abs(dx), Math.abs(dy)) * 0.4;
+            
+            let cp1x = fromAnchor.x, cp1y = fromAnchor.y;
+            let cp2x = toAnchor.x, cp2y = toAnchor.y;
+            
+            switch (fromAnchor.direction) {
+                case 'top': cp1y -= controlOffset; break;
+                case 'bottom': cp1y += controlOffset; break;
+                case 'left': cp1x -= controlOffset; break;
+                case 'right': cp1x += controlOffset; break;
+            }
+            
+            switch (toAnchor.direction) {
+                case 'top': cp2y -= controlOffset; break;
+                case 'bottom': cp2y += controlOffset; break;
+                case 'left': cp2x -= controlOffset; break;
+                case 'right': cp2x += controlOffset; break;
+            }
+            
+            return `M ${fromAnchor.x} ${fromAnchor.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${toAnchor.x} ${toAnchor.y}`;
+        }
+        
+        function createOrthogonalPath(fromAnchor, toAnchor) {
+            let path = `M ${fromAnchor.x} ${fromAnchor.y}`;
+            
+            if (fromAnchor.direction === 'right' && toAnchor.direction === 'left') {
+                const midX = (fromAnchor.x + toAnchor.x) / 2;
+                path += ` L ${midX} ${fromAnchor.y} L ${midX} ${toAnchor.y}`;
+            } else if (fromAnchor.direction === 'bottom' && toAnchor.direction === 'top') {
+                const midY = (fromAnchor.y + toAnchor.y) / 2;
+                path += ` L ${fromAnchor.x} ${midY} L ${toAnchor.x} ${midY}`;
+            } else {
+                if (fromAnchor.direction === 'right' || fromAnchor.direction === 'left') {
+                    path += ` L ${toAnchor.x} ${fromAnchor.y}`;
+                } else {
+                    path += ` L ${fromAnchor.x} ${toAnchor.y}`;
+                }
+            }
+            
+            path += ` L ${toAnchor.x} ${toAnchor.y}`;
+            return path;
+        }
+        
+        function drawConnections() {
+            const svg = document.getElementById('demo-svg');
+            svg.innerHTML = '';
+            
+            demoConnections.forEach(([from, to]) => {
+                const fromAnchors = getModuleAnchorPoints(from);
+                const toAnchors = getModuleAnchorPoints(to);
+                
+                if (!fromAnchors || !toAnchors) return;
+                
+                const anchorPair = selectBestAnchorPair(fromAnchors, toAnchors);
+                if (!anchorPair) return;
+                
+                let pathData;
+                if (connectionMode === 'curved') {
+                    pathData = createCurvedPath(anchorPair.from, anchorPair.to);
+                } else {
+                    pathData = createOrthogonalPath(anchorPair.from, anchorPair.to);
+                }
+                
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', pathData);
+                path.setAttribute('stroke', '#3498db');
+                path.setAttribute('stroke-width', '3');
+                path.setAttribute('fill', 'none');
+                path.setAttribute('opacity', '0.7');
+                path.className = 'connection-line';
+                
+                if (connectionMode === 'curved') {
+                    path.setAttribute('stroke-linecap', 'round');
+                } else {
+                    path.setAttribute('stroke-linejoin', 'round');
+                }
+                
+                svg.appendChild(path);
+                
+                if (showAnchorPoints) {
+                    addAnchorVisualization(svg, anchorPair.from, '#e74c3c');
+                    addAnchorVisualization(svg, anchorPair.to, '#27ae60');
+                }
+            });
+        }
+        
+        function addAnchorVisualization(svg, anchor, color) {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', anchor.x);
+            circle.setAttribute('cy', anchor.y);
+            circle.setAttribute('r', '5');
+            circle.setAttribute('fill', color);
+            circle.setAttribute('opacity', '0.8');
+            svg.appendChild(circle);
+        }
+        
+        function toggleMode() {
+            connectionMode = connectionMode === 'curved' ? 'orthogonal' : 'curved';
+            document.getElementById('current-mode').textContent = 
+                connectionMode === 'curved' ? '曲线' : '直角';
+            drawConnections();
+        }
+        
+        function toggleAnchors() {
+            showAnchorPoints = !showAnchorPoints;
+            drawConnections();
+        }
+        
+        function redrawConnections() {
+            drawConnections();
+        }
+        
+        // 拖拽功能
+        let isDragging = false;
+        let dragTarget = null;
+        let dragOffset = { x: 0, y: 0 };
+        
+        document.querySelectorAll('.demo-module').forEach(module => {
+            module.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                dragTarget = this;
+                const rect = this.getBoundingClientRect();
+                dragOffset.x = e.clientX - rect.left;
+                dragOffset.y = e.clientY - rect.top;
+                e.preventDefault();
+            });
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging || !dragTarget) return;
+            
+            const container = document.querySelector('.demo-container');
+            const containerRect = container.getBoundingClientRect();
+            
+            const x = e.clientX - containerRect.left - dragOffset.x;
+            const y = e.clientY - containerRect.top - dragOffset.y;
+            
+            const maxX = container.clientWidth - dragTarget.offsetWidth;
+            const maxY = container.clientHeight - dragTarget.offsetHeight;
+            
+            dragTarget.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
+            dragTarget.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
+            dragTarget.style.right = 'auto';
+            dragTarget.style.bottom = 'auto';
+            dragTarget.style.transform = 'none';
+            
+            drawConnections();
+        });
+        
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+            dragTarget = null;
+        });
+        
+        // 初始化
+        window.addEventListener('load', function() {
+            setTimeout(drawConnections, 100);
+        });
+    </script>
+</body>
+</html> 

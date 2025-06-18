@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>连接线优化测试 - AI认知系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .test-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .test-title {
+            color: #00ff88;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            border-bottom: 1px solid #00ff88;
+            padding-bottom: 5px;
+        }
+        
+        .test-section {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+        
+        .test-button {
+            margin: 3px;
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .test-button:hover {
+            background: linear-gradient(135deg, #2980b9, #1abc9c);
+        }
+        
+        .connection-info {
+            margin: 5px 0;
+            padding: 5px;
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 3px solid #3498db;
+            font-size: 10px;
+            line-height: 1.3;
+        }
+        
+        .score-display {
+            color: #ffcc66;
+            font-weight: bold;
+        }
+        
+        .direction-display {
+            color: #66ccff;
+        }
+        
+        .distance-display {
+            color: #ff6b6b;
+        }
+        
+        .visual-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            z-index: 1000;
+        }
+        
+        .highlight-connection {
+            stroke: #ff0080 !important;
+            stroke-width: 6 !important;
+            opacity: 1 !important;
+            filter: drop-shadow(0 0 8px #ff0080) !important;
+        }
+        
+        .connection-score-label {
+            font-size: 10px;
+            fill: #ffcc66;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="system-title">
+            <h1>连接线优化测试 - AI认知系统</h1>
+        </div>
+
+        <svg class="connections-svg" id="connections-svg">
+            <!-- 连接线将在这里动态绘制 -->
+        </svg>
+
+        <!-- 使用您提供的新布局 -->
+        <div class="module" id="global-time" style="top: 580px; left: 150px;">
+            <div class="module-name">Global Time System<br>Temporal Coordination</div>
+        </div>
+
+        <div class="module" id="external-stimuli" style="top: 180px; left: 150px;">
+            <div class="module-name">External Stimuli<br>Information Input</div>
+        </div>
+
+        <div class="module" id="perception" style="top: 380px; left: 150px;">
+            <div class="module-name">Perception & Input<br>Sensory Processing</div>
+        </div>
+
+        <div class="module" id="ai-cognitive" style="top: 180px; left: 480px;">
+            <div class="module-name">AI Cognitive Core<br>Central Processing</div>
+        </div>
+
+        <div class="module" id="thinking-core" style="top: 280px; left: 50%; transform: translateX(-50%);">
+            <div class="module-name">Thinking Core<br>Decision Making</div>
+        </div>
+
+        <div class="module" id="personality" style="top: 380px; left: 1180px;">
+            <div class="module-name">Personality & Emotion<br>Character Traits</div>
+        </div>
+
+        <div class="module" id="skills" style="top: 510px; left: 1180px;">
+            <div class="module-name">Skills Module<br>Capability Processing</div>
+        </div>
+
+        <div class="module" id="needs" style="top: 640px; left: 1180px;">
+            <div class="module-name">Needs & Motivation<br>Drive System</div>
+        </div>
+
+        <div class="module" id="planning" style="top: 120px; left: 1180px;">
+            <div class="module-name">Planning System<br>Strategy Formation</div>
+        </div>
+
+        <div class="module" id="relationship" style="top: 250px; left: 1180px;">
+            <div class="module-name">Relationship Module<br>Social Processing</div>
+        </div>
+
+        <div class="module" id="action-output" style="top: 590px; left: 1580px; transform: translateX(-50%);">
+            <div class="module-name">Action & Output<br>Response Generation</div>
+        </div>
+
+        <div class="module" id="environment" style="top: 580px; left: 480px;">
+            <div class="module-name">Environment Interaction<br>External Interface</div>
+        </div>
+
+        <div class="module" id="memory" style="top: 380px; left: 480px;">
+            <div class="module-name">Memory System<br>Information Storage</div>
+        </div>
+    </div>
+
+    <!-- 测试控制面板 -->
+    <div class="test-container">
+        <div class="test-title">🔗 连接优化测试</div>
+        
+        <div class="test-section">
+            <h3>🎛️ 控制</h3>
+            <button class="test-button" onclick="analyzeAllConnections()">分析所有连接</button>
+            <button class="test-button" onclick="toggleConnectionMode()">切换连接模式</button>
+            <button class="test-button" onclick="toggleAnchorPoints()">显示/隐藏锚点</button>
+            <button class="test-button" onclick="showConnectionScores()">显示评分</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 连接分析</h3>
+            <div id="analysis-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎯 特定连接测试</h3>
+            <button class="test-button" onclick="highlightConnection('external-stimuli', 'perception')">外部刺激→感知</button>
+            <button class="test-button" onclick="highlightConnection('perception', 'global-time')">感知→时间系统</button>
+            <button class="test-button" onclick="highlightConnection('thinking-core', 'personality')">思维核心→个性</button>
+            <button class="test-button" onclick="highlightConnection('ai-cognitive', 'memory')">AI核心→记忆</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>📈 优化建议</h3>
+            <div id="optimization-suggestions"></div>
+        </div>
+    </div>
+
+    <!-- 可视化提示 -->
+    <div class="visual-hint">
+        <div>🔍 <strong>连接线分析工具</strong></div>
+        <div>• 绿色锚点：起始模块</div>
+        <div>• 蓝色锚点：目标模块</div>
+        <div>• 粉色高亮：当前分析的连接</div>
+        <div>• 黄色数字：连接评分</div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+    
+    <script type="module">
+        import { 
+            drawConnections, 
+            toggleConnectionMode, 
+            toggleAnchorPoints,
+            getModuleAnchorPoints,
+            selectBestAnchorPair 
+        } from './js/connections.js';
+        import { connections } from './js/config.js';
+
+        // 暴露测试函数到全局
+        window.toggleConnectionMode = toggleConnectionMode;
+        window.toggleAnchorPoints = toggleAnchorPoints;
+        
+        let currentHighlight = null;
+
+        // 分析所有连接
+        window.analyzeAllConnections = function() {
+            const results = document.getElementById('analysis-results');
+            let html = '';
+            let totalScore = 0;
+            let connectionCount = 0;
+            
+            connections.forEach(([from, to]) => {
+                const analysis = analyzeConnection(from, to);
+                if (analysis) {
+                    html += `
+                        <div class="connection-info">
+                            <div><strong>${analysis.fromId} → ${analysis.toId}</strong></div>
+                            <div class="score-display">评分: ${analysis.score.toFixed(1)}</div>
+                            <div class="direction-display">方向: ${analysis.fromDir} → ${analysis.toDir}</div>
+                            <div class="distance-display">距离: ${analysis.distance.toFixed(0)}px</div>
+                        </div>
+                    `;
+                    totalScore += analysis.score;
+                    connectionCount++;
+                }
+            });
+            
+            const avgScore = connectionCount > 0 ? totalScore / connectionCount : 0;
+            html = `<div class="score-display">平均评分: ${avgScore.toFixed(1)}</div>` + html;
+            
+            results.innerHTML = html;
+            
+            // 生成优化建议
+            generateOptimizationSuggestions();
+        };
+
+        // 分析单个连接
+        function analyzeConnection(fromId, toId) {
+            const fromAnchors = getModuleAnchorPoints(fromId);
+            const toAnchors = getModuleAnchorPoints(toId);
+            
+            if (!fromAnchors || !toAnchors) return null;
+            
+            const bestPair = selectBestAnchorPair(fromAnchors, toAnchors);
+            
+            // 重新计算评分以获取详细信息
+            const fromCenter = { 
+                x: (fromAnchors.left.x + fromAnchors.right.x) / 2,
+                y: (fromAnchors.top.y + fromAnchors.bottom.y) / 2
+            };
+            const toCenter = { 
+                x: (toAnchors.left.x + toAnchors.right.x) / 2,
+                y: (toAnchors.top.y + toAnchors.bottom.y) / 2
+            };
+            
+            const dx = toCenter.x - fromCenter.x;
+            const dy = toCenter.y - fromCenter.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // 找出使用的方向
+            let fromDir = 'unknown', toDir = 'unknown';
+            Object.entries(fromAnchors).forEach(([dir, anchor]) => {
+                if (anchor.x === bestPair.from.x && anchor.y === bestPair.from.y) {
+                    fromDir = dir;
+                }
+            });
+            Object.entries(toAnchors).forEach(([dir, anchor]) => {
+                if (anchor.x === bestPair.to.x && anchor.y === bestPair.to.y) {
+                    toDir = dir;
+                }
+            });
+            
+            // 计算评分（简化版）
+            let score = 100;
+            if (Math.abs(dx) > Math.abs(dy) * 1.5) {
+                // 主要是水平关系
+                if ((dx > 0 && fromDir === 'right' && toDir === 'left') ||
+                    (dx < 0 && fromDir === 'left' && toDir === 'right')) {
+                    score += 100;
+                }
+            } else if (Math.abs(dy) > Math.abs(dx) * 1.5) {
+                // 主要是垂直关系
+                if ((dy > 0 && fromDir === 'bottom' && toDir === 'top') ||
+                    (dy < 0 && fromDir === 'top' && toDir === 'bottom')) {
+                    score += 100;
+                }
+            }
+            
+            return {
+                fromId,
+                toId,
+                fromDir,
+                toDir,
+                distance,
+                score,
+                bestPair
+            };
+        }
+
+        // 高亮特定连接
+        window.highlightConnection = function(fromId, toId) {
+            // 清除之前的高亮
+            if (currentHighlight) {
+                const prevPath = document.getElementById(`connection-${currentHighlight.from}-${currentHighlight.to}`);
+                if (prevPath) {
+                    prevPath.classList.remove('highlight-connection');
+                }
+            }
+            
+            // 高亮新连接
+            const path = document.getElementById(`connection-${fromId}-${toId}`);
+            if (path) {
+                path.classList.add('highlight-connection');
+                currentHighlight = { from: fromId, to: toId };
+                
+                // 分析这个连接
+                const analysis = analyzeConnection(fromId, toId);
+                if (analysis) {
+                    const results = document.getElementById('analysis-results');
+                    results.innerHTML = `
+                        <div class="connection-info" style="background: rgba(255, 0, 128, 0.1); border-color: #ff0080;">
+                            <div><strong>🎯 ${analysis.fromId} → ${analysis.toId}</strong></div>
+                            <div class="score-display">评分: ${analysis.score.toFixed(1)}</div>
+                            <div class="direction-display">使用方向: ${analysis.fromDir} → ${analysis.toDir}</div>
+                            <div class="distance-display">锚点距离: ${analysis.distance.toFixed(0)}px</div>
+                            <div style="margin-top: 5px; color: #00ff88;">
+                                ${getConnectionComment(analysis)}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        };
+
+        // 获取连接评价
+        function getConnectionComment(analysis) {
+            if (analysis.score > 180) {
+                return "🟢 优秀的连接路径";
+            } else if (analysis.score > 150) {
+                return "🟡 良好的连接路径";
+            } else if (analysis.score > 120) {
+                return "🟠 可以接受的连接路径";
+            } else {
+                return "🔴 需要优化的连接路径";
+            }
+        }
+
+        // 显示连接评分
+        window.showConnectionScores = function() {
+            const svg = document.getElementById('connections-svg');
+            
+            // 清除现有的评分标签
+            const existingLabels = svg.querySelectorAll('.connection-score-label');
+            existingLabels.forEach(label => label.remove());
+            
+            connections.forEach(([from, to]) => {
+                const analysis = analyzeConnection(from, to);
+                if (analysis && analysis.bestPair) {
+                    const midX = (analysis.bestPair.from.x + analysis.bestPair.to.x) / 2;
+                    const midY = (analysis.bestPair.from.y + analysis.bestPair.to.y) / 2;
+                    
+                    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    text.setAttribute('x', midX);
+                    text.setAttribute('y', midY);
+                    text.setAttribute('class', 'connection-score-label');
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('dominant-baseline', 'middle');
+                    text.textContent = analysis.score.toFixed(0);
+                    
+                    svg.appendChild(text);
+                }
+            });
+        };
+
+        // 生成优化建议
+        function generateOptimizationSuggestions() {
+            const suggestions = document.getElementById('optimization-suggestions');
+            let html = '';
+            
+            connections.forEach(([from, to]) => {
+                const analysis = analyzeConnection(from, to);
+                if (analysis && analysis.score < 150) {
+                    html += `
+                        <div class="connection-info" style="border-color: #ff6b6b;">
+                            <div><strong>${from} → ${to}</strong></div>
+                            <div>建议: 考虑调整模块位置以改善连接路径</div>
+                        </div>
+                    `;
+                }
+            });
+            
+            if (html === '') {
+                html = '<div style="color: #2ecc71;">✅ 所有连接路径都已优化</div>';
+            }
+            
+            suggestions.innerHTML = html;
+        }
+
+        // 初始化
+        setTimeout(() => {
+            drawConnections();
+            analyzeAllConnections();
+        }, 500);
+    </script>
+</body>
+</html> 

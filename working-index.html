@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI认知系统 - 信息传导模拟器</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="system-title">
+            <h1>AI认知系统 - 信息传导模拟器</h1>
+        </div>
+
+        <svg class="connections-svg" id="connections-svg">
+            <!-- 连接线将在这里动态绘制 -->
+        </svg>
+
+        <!-- 第一层：全局时间系统 -->
+        <div class="module" id="global-time" style="top: 80px; left: 50%; transform: translateX(-50%);">
+            <div class="module-name">Global Time System<br>全局时间系统</div>
+        </div>
+
+        <!-- 第二层：输入流程 -->
+        <div class="module" id="external-stimuli" style="top: 180px; left: 100px;">
+            <div class="module-name">External Stimuli<br>外部刺激</div>
+        </div>
+
+        <div class="module" id="perception" style="top: 180px; left: 350px;">
+            <div class="module-name">Perception & Input<br>感知与输入模块</div>
+        </div>
+
+        <div class="module" id="ai-cognitive" style="top: 180px; left: 600px;">
+            <div class="module-name">AI Cognitive Core<br>AI认知核心</div>
+        </div>
+
+        <!-- 第三层：思维核心 -->
+        <div class="module" id="thinking-core" style="top: 280px; left: 50%; transform: translateX(-50%);">
+            <div class="module-name">Thinking Core<br>思维核心</div>
+        </div>
+
+        <!-- 第四层：处理模块群（水平排列） -->
+        <div class="module" id="personality" style="top: 380px; left: 80px;">
+            <div class="module-name">Personality & Emotion<br>个性与情感核心</div>
+        </div>
+
+        <div class="module" id="skills" style="top: 380px; left: 280px;">
+            <div class="module-name">Skills Module<br>技能模块</div>
+        </div>
+
+        <div class="module" id="needs" style="top: 380px; left: 480px;">
+            <div class="module-name">Needs & Motivation<br>需求与动机系统</div>
+        </div>
+
+        <div class="module" id="planning" style="top: 380px; left: 680px;">
+            <div class="module-name">Planning System<br>规划系统</div>
+        </div>
+
+        <div class="module" id="relationship" style="top: 380px; left: 880px;">
+            <div class="module-name">Relationship Module<br>关系模块</div>
+        </div>
+
+        <!-- 第五层：输出流程 -->
+        <div class="module" id="action-output" style="top: 480px; left: 50%; transform: translateX(-50%);">
+            <div class="module-name">Action & Output<br>行动与输出模块</div>
+        </div>
+
+        <!-- 第六层：环境交互和记忆 -->
+        <div class="module" id="environment" style="top: 580px; left: 300px;">
+            <div class="module-name">Environment Interaction<br>环境交互模块</div>
+        </div>
+
+        <div class="module" id="memory" style="top: 580px; left: 650px;">
+            <div class="module-name">Memory System<br>记忆系统</div>
+        </div>
+
+        <div class="connection-hint">
+            <strong>💡 操作提示：</strong><br>
+            • 拖拽模块改变位置<br>
+            • 连接线会自动更新<br>
+            • 切换连接线显示/隐藏<br><br>
+            <strong>🧠 智能连接系统：</strong><br>
+            • 智能锚点：自动选择最佳连接点<br>
+            • 曲线/直角两种连接模式<br>
+            • 拖拽模块，连接线实时更新<br>
+            • 支持锚点可视化调试
+        </div>
+
+        <div class="info-panel">
+            <div class="info-title">当前活动模块</div>
+            <div class="info-content" id="current-info">
+                点击"开始模拟"按钮开始信息传导演示
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <button class="btn btn-primary" id="start-btn">开始模拟</button>
+            <button class="btn btn-secondary" id="stop-btn">停止模拟</button>
+            <button class="btn btn-secondary" id="reset-btn">重置</button>
+            <button class="btn btn-toggle" id="connections-toggle">隐藏连接线</button>
+            <button class="btn btn-toggle" id="mode-toggle">切换为直角</button>
+            <button class="btn btn-secondary" id="anchors-toggle">显示锚点</button>
+            <button class="btn btn-debug" id="debug-draw" style="background: #f39c12;">强制绘制</button>
+            <div class="speed-control">
+                <span>模拟速度:</span>
+                <input type="range" class="speed-slider" min="500" max="3000" value="1500" id="speed-slider">
+            </div>
+            <div class="speed-control">
+                <span>流动速度:</span>
+                <input type="range" class="speed-slider" min="800" max="4000" value="2000" id="flow-speed-slider">
+            </div>
+            <div class="control-hint" id="control-hint">
+                未启动状态下可以拖动模块
+            </div>
+        </div>
+    </div>
+
+    <!-- 屏幕方向提示 -->
+    <div class="orientation-hint" id="orientation-hint">
+        <h3>📱 建议横屏查看</h3>
+        <p>为了最佳体验，请将设备旋转至横屏模式</p>
+    </div>
+
+    <!-- 缩放控制器 -->
+    <div class="zoom-controls">
+        <button class="zoom-btn" id="zoom-in-btn">+</button>
+        <div class="zoom-indicator" id="zoom-indicator">100%</div>
+        <button class="zoom-btn" id="zoom-out-btn">−</button>
+        <button class="zoom-btn" id="zoom-reset-btn">⌂</button>
+    </div>
+
+    <!-- 状态指示器 -->
+    <div id="status-indicator" style="position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.8); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px; z-index: 1000;">
+        初始化中...
+    </div>
+
+    <!-- 模块化脚本加载 -->
+    <script type="module">
+        const statusIndicator = document.getElementById('status-indicator');
+        
+        function updateStatus(message) {
+            statusIndicator.textContent = message;
+            console.log('状态:', message);
+        }
+        
+        updateStatus('加载模块...');
+        
+        try {
+            // 导入所有模块
+            const modules = await Promise.all([
+                import('./js/config.js'),
+                import('./js/connections.js'),
+                import('./js/animation.js'),
+                import('./js/simulation.js'),
+                import('./js/dragdrop.js'),
+                import('./js/zoom.js'),
+                import('./js/language.js')
+            ]);
+            
+            updateStatus('模块加载完成');
+            
+            // 解构导入的功能
+            const config = modules[0];
+            const connections = modules[1];
+            const animation = modules[2];
+            const simulation = modules[3];
+            const dragdrop = modules[4];
+            const zoom = modules[5];
+            const language = modules[6];
+            
+            // 创建全局API对象
+            window.AICognitiveSystem = {
+                // 模拟控制
+                startSimulation: simulation.startSimulation,
+                stopSimulation: simulation.stopSimulation,
+                resetSimulation: simulation.resetSimulation,
+                
+                // 连接线控制
+                drawConnections: connections.drawConnections,
+                toggleConnections: connections.toggleConnections,
+                toggleConnectionMode: connections.toggleConnectionMode,
+                toggleAnchorPoints: connections.toggleAnchorPoints,
+                
+                // 缩放控制
+                zoomIn: zoom.zoomIn,
+                zoomOut: zoom.zoomOut,
+                resetZoom: zoom.resetZoom,
+                
+                // 调试功能
+                debugState: config.debugState
+            };
+            
+            updateStatus('绑定事件...');
+            
+            // 绑定按钮事件
+            document.getElementById('start-btn').onclick = window.AICognitiveSystem.startSimulation;
+            document.getElementById('stop-btn').onclick = window.AICognitiveSystem.stopSimulation;
+            document.getElementById('reset-btn').onclick = window.AICognitiveSystem.resetSimulation;
+            document.getElementById('connections-toggle').onclick = window.AICognitiveSystem.toggleConnections;
+            document.getElementById('mode-toggle').onclick = window.AICognitiveSystem.toggleConnectionMode;
+            document.getElementById('anchors-toggle').onclick = window.AICognitiveSystem.toggleAnchorPoints;
+            
+            // 缩放按钮事件
+            document.getElementById('zoom-in-btn').onclick = window.AICognitiveSystem.zoomIn;
+            document.getElementById('zoom-out-btn').onclick = window.AICognitiveSystem.zoomOut;
+            document.getElementById('zoom-reset-btn').onclick = window.AICognitiveSystem.resetZoom;
+            
+            // 调试按钮事件
+            document.getElementById('debug-draw').onclick = () => {
+                updateStatus('手动重绘连接线...');
+                connections.drawConnections();
+                const svg = document.getElementById('connections-svg');
+                const paths = svg.querySelectorAll('path');
+                updateStatus(`手动绘制完成 (${paths.length}条连接线)`);
+                console.log('手动绘制结果:', { pathCount: paths.length, svgContent: svg.innerHTML.substring(0, 200) });
+            };
+            
+            // 滑块事件
+            document.getElementById('speed-slider').addEventListener('input', function(e) {
+                simulation.setSimulationSpeed(parseInt(e.target.value));
+            });
+            
+            document.getElementById('flow-speed-slider').addEventListener('input', function(e) {
+                animation.setFlowSpeedValue(parseInt(e.target.value));
+            });
+            
+            updateStatus('初始化系统...');
+            
+            // 初始化各个子系统（顺序很重要）
+            zoom.initializeZoomSystem();
+            animation.initializeAnimations();
+            dragdrop.setupDragAndDrop();
+            
+            // 语言系统最后初始化（因为它需要操作DOM元素）
+            setTimeout(() => {
+                try {
+                    language.initializeLanguageSystem();
+                    updateStatus('✅ 语言系统初始化完成');
+                } catch (error) {
+                    console.warn('语言系统初始化失败:', error);
+                    updateStatus('⚠️ 语言系统跳过（非关键）');
+                }
+            }, 100);
+            
+            // 确保连接线绘制成功
+            function ensureConnectionsDrawn() {
+                try {
+                    updateStatus('绘制连接线...');
+                    connections.drawConnections();
+                    
+                    // 验证连接线是否成功绘制
+                    const svg = document.getElementById('connections-svg');
+                    const paths = svg.querySelectorAll('path');
+                    
+                    if (paths.length > 0) {
+                        updateStatus(`✅ 系统就绪 (${paths.length}条连接线)`);
+                    } else {
+                        updateStatus('⚠️ 连接线未显示，尝试重绘...');
+                        // 再次尝试绘制
+                        setTimeout(() => {
+                            connections.drawConnections();
+                            const retryPaths = svg.querySelectorAll('path');
+                            updateStatus(`✅ 重绘完成 (${retryPaths.length}条连接线)`);
+                        }, 500);
+                    }
+                } catch (error) {
+                    updateStatus('❌ 连接线绘制失败: ' + error.message);
+                    console.error('连接线绘制错误:', error);
+                }
+                
+                // 3秒后隐藏状态指示器
+                setTimeout(() => {
+                    statusIndicator.style.opacity = '0';
+                    setTimeout(() => {
+                        statusIndicator.style.display = 'none';
+                    }, 500);
+                }, 3000);
+            }
+            
+            // 延迟确保DOM完全加载
+            setTimeout(ensureConnectionsDrawn, 300);
+            
+            // 窗口事件
+            window.addEventListener('resize', () => {
+                setTimeout(connections.drawConnections, 100);
+            });
+            
+            window.addEventListener('orientationchange', () => {
+                setTimeout(connections.drawConnections, 300);
+            });
+            
+            console.log('🎉 AI认知系统模块化版本加载完成');
+            
+        } catch (error) {
+            console.error('❌ 系统加载失败:', error);
+            updateStatus('❌ 加载失败: ' + error.message);
+            
+            // 显示错误信息
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background: rgba(231, 76, 60, 0.95); color: white; padding: 20px;
+                border-radius: 15px; text-align: center; z-index: 1000;
+                max-width: 80%; word-wrap: break-word;
+            `;
+            errorDiv.innerHTML = `
+                <h3>❌ 系统加载失败</h3>
+                <p>错误信息: ${error.message}</p>
+                <p>请检查浏览器控制台获取详细信息</p>
+                <button onclick="location.reload()" style="margin-top: 10px; padding: 5px 15px; border: none; border-radius: 5px; background: white; color: #e74c3c; cursor: pointer;">重新加载</button>
+            `;
+            document.body.appendChild(errorDiv);
+        }
+    </script>
+    
+    <!-- 备用脚本（用于不支持模块的浏览器） -->
+    <script nomodule>
+        console.warn('⚠️ 当前浏览器不支持ES6模块');
+        document.getElementById('status-indicator').textContent = '⚠️ 浏览器不兼容';
+        
+        // 显示升级提示
+        setTimeout(() => {
+            const hint = document.createElement('div');
+            hint.style.cssText = `
+                position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                background: rgba(231, 76, 60, 0.95); color: white; padding: 20px;
+                border-radius: 15px; text-align: center; z-index: 1000;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            `;
+            hint.innerHTML = `
+                <h3>⚠️ 浏览器兼容性提示</h3>
+                <p>当前浏览器不支持ES6模块</p>
+                <p>建议使用Chrome、Firefox、Safari或Edge最新版本</p>
+                <p>或者使用备用版本：<a href="ai_cognitive_system.html" style="color: #ecf0f1; text-decoration: underline;">点击这里</a></p>
+                <button onclick="this.parentNode.remove()" style="margin-top: 10px; padding: 5px 15px; border: none; border-radius: 5px; background: white; color: #e74c3c; cursor: pointer;">我知道了</button>
+            `;
+            document.body.appendChild(hint);
+        }, 1000);
+    </script>
+</body>
+</html> 

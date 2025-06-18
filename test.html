@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>连接线测试</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        
+        .container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: white;
+            border: 2px solid #333;
+        }
+        
+        .connections-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+        
+        .connection-line {
+            stroke: #3498db;
+            stroke-width: 3;
+            opacity: 0.8;
+        }
+        
+        .module {
+            position: absolute;
+            background: #fff;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            padding: 10px;
+            z-index: 10;
+            width: 100px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        #module1 { top: 50px; left: 50px; }
+        #module2 { top: 50px; right: 50px; }
+        #module3 { bottom: 50px; left: 50px; }
+        #module4 { bottom: 50px; right: 50px; }
+        
+        .controls {
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            background: #3498db;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>连接线显示测试</h1>
+    
+    <div class="container">
+        <svg class="connections-svg" id="connections-svg">
+            <!-- 连接线将在这里绘制 -->
+        </svg>
+        
+        <div class="module" id="module1">模块1</div>
+        <div class="module" id="module2">模块2</div>
+        <div class="module" id="module3">模块3</div>
+        <div class="module" id="module4">模块4</div>
+    </div>
+    
+    <div class="controls">
+        <button onclick="drawTestLines()">绘制连接线</button>
+        <button onclick="clearLines()">清除连接线</button>
+        <button onclick="showDebugInfo()">显示调试信息</button>
+    </div>
+    
+    <div id="debug-info"></div>
+
+    <script>
+        const testConnections = [
+            ['module1', 'module2'],
+            ['module2', 'module4'],
+            ['module4', 'module3'],
+            ['module3', 'module1']
+        ];
+
+        function getModuleCenter(moduleId) {
+            const module = document.getElementById(moduleId);
+            if (!module) {
+                console.error(`Module ${moduleId} not found`);
+                return { x: 0, y: 0 };
+            }
+            
+            const rect = module.getBoundingClientRect();
+            const containerRect = document.querySelector('.container').getBoundingClientRect();
+            
+            const center = {
+                x: rect.left - containerRect.left + rect.width / 2,
+                y: rect.top - containerRect.top + rect.height / 2
+            };
+            
+            console.log(`Module ${moduleId} center:`, center);
+            return center;
+        }
+
+        function drawTestLines() {
+            const svg = document.getElementById('connections-svg');
+            svg.innerHTML = '';
+
+            testConnections.forEach(([from, to]) => {
+                const fromCenter = getModuleCenter(from);
+                const toCenter = getModuleCenter(to);
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', fromCenter.x);
+                line.setAttribute('y1', fromCenter.y);
+                line.setAttribute('x2', toCenter.x);
+                line.setAttribute('y2', toCenter.y);
+                line.className = 'connection-line';
+
+                svg.appendChild(line);
+                console.log(`Drew line from ${from} to ${to}`);
+            });
+            
+            console.log(`Total lines drawn: ${svg.children.length}`);
+        }
+
+        function clearLines() {
+            document.getElementById('connections-svg').innerHTML = '';
+        }
+
+        function showDebugInfo() {
+            const debugDiv = document.getElementById('debug-info');
+            let info = '<h3>调试信息:</h3>';
+            
+            ['module1', 'module2', 'module3', 'module4'].forEach(moduleId => {
+                const center = getModuleCenter(moduleId);
+                info += `<p>${moduleId}: x=${center.x}, y=${center.y}</p>`;
+            });
+            
+            debugDiv.innerHTML = info;
+        }
+
+        // 页面加载后自动绘制
+        window.addEventListener('load', () => {
+            setTimeout(drawTestLines, 100);
+        });
+    </script>
+</body>
+</html> 

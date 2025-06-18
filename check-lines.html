@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>连接线可见性检查工具</title>
+    <style>
+        body { 
+            margin: 20px; 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6;
+        }
+        .check-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            font-size: 14px; 
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+        }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🔍 连接线可见性检查工具</h1>
+    
+    <div class="check-section">
+        <h2>1. 浏览器基础检查</h2>
+        <button onclick="checkBrowser()">检查浏览器支持</button>
+        <div id="browser-result"></div>
+    </div>
+    
+    <div class="check-section">
+        <h2>2. SVG基础功能检查</h2>
+        <button onclick="checkSVG()">测试SVG绘制</button>
+        <div id="svg-test-container" style="margin: 10px 0;">
+            <svg width="300" height="100" style="border: 1px solid #333;" id="test-svg">
+                <!-- 测试线条将在这里绘制 -->
+            </svg>
+        </div>
+        <div id="svg-result"></div>
+    </div>
+    
+    <div class="check-section">
+        <h2>3. CSS冲突检查</h2>
+        <button onclick="checkCSS()">检查样式冲突</button>
+        <div id="css-result"></div>
+    </div>
+    
+    <div class="check-section">
+        <h2>4. 模拟主项目环境测试</h2>
+        <button onclick="testMainProject()">模拟主项目连接线</button>
+        <div style="position: relative; width: 600px; height: 400px; border: 2px solid #000; margin: 10px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" id="main-test">
+            <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 15; pointer-events: none;" id="main-svg" xmlns="http://www.w3.org/2000/svg">
+            </svg>
+            <div style="position: absolute; top: 50px; left: 50px; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 10px; backdrop-filter: blur(10px);" id="module1">模块1</div>
+            <div style="position: absolute; top: 50px; right: 50px; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 10px; backdrop-filter: blur(10px);" id="module2">模块2</div>
+            <div style="position: absolute; bottom: 50px; left: 200px; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 10px; backdrop-filter: blur(10px);" id="module3">模块3</div>
+        </div>
+        <div id="main-result"></div>
+    </div>
+    
+    <div class="check-section">
+        <h2>5. 解决方案建议</h2>
+        <div id="solutions">
+            <h3>常见问题及解决方案：</h3>
+            <ul>
+                <li><strong>SVG不显示：</strong> 检查CSS z-index设置</li>
+                <li><strong>坐标错误：</strong> 验证getBoundingClientRect()计算</li>
+                <li><strong>backdrop-filter冲突：</strong> 移除或调整SVG的backdrop-filter</li>
+                <li><strong>浏览器兼容性：</strong> 确保使用现代浏览器</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function checkBrowser() {
+            const result = document.getElementById('browser-result');
+            let html = '<h3>浏览器兼容性检查：</h3>';
+            
+            // 检查SVG支持
+            const svgSupported = document.createElementNS && document.createElementNS('http://www.w3.org/2000/svg', 'svg').createSVGRect;
+            html += `<div class="${svgSupported ? 'success' : 'error'}">SVG支持: ${svgSupported ? '✓ 支持' : '✗ 不支持'}</div>`;
+            
+            // 检查getBoundingClientRect支持
+            const rectSupported = 'getBoundingClientRect' in document.createElement('div');
+            html += `<div class="${rectSupported ? 'success' : 'error'}">getBoundingClientRect支持: ${rectSupported ? '✓ 支持' : '✗ 不支持'}</div>`;
+            
+            // 检查backdrop-filter支持
+            const backdropSupported = CSS.supports('backdrop-filter', 'blur(10px)');
+            html += `<div class="${backdropSupported ? 'success' : 'warning'}">backdrop-filter支持: ${backdropSupported ? '✓ 支持' : '⚠ 不支持'}</div>`;
+            
+            html += `<div class="result">浏览器: ${navigator.userAgent}</div>`;
+            
+            result.innerHTML = html;
+        }
+        
+        function checkSVG() {
+            const result = document.getElementById('svg-result');
+            const svg = document.getElementById('test-svg');
+            
+            try {
+                // 清除现有内容
+                svg.innerHTML = '';
+                
+                // 创建测试线条
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', '10');
+                line.setAttribute('y1', '10');
+                line.setAttribute('x2', '290');
+                line.setAttribute('y2', '90');
+                line.setAttribute('stroke', 'red');
+                line.setAttribute('stroke-width', '3');
+                
+                svg.appendChild(line);
+                
+                // 创建第二条线
+                const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line2.setAttribute('x1', '10');
+                line2.setAttribute('y1', '90');
+                line2.setAttribute('x2', '290');
+                line2.setAttribute('y2', '10');
+                line2.setAttribute('stroke', 'blue');
+                line2.setAttribute('stroke-width', '3');
+                
+                svg.appendChild(line2);
+                
+                result.innerHTML = `<div class="success">✓ SVG线条绘制成功！如果你能看到上方的红蓝交叉线，说明SVG功能正常。SVG子元素数量: ${svg.children.length}</div>`;
+                
+            } catch (error) {
+                result.innerHTML = `<div class="error">✗ SVG绘制失败: ${error.message}</div>`;
+            }
+        }
+        
+        function checkCSS() {
+            const result = document.getElementById('css-result');
+            let html = '<h3>CSS样式检查：</h3>';
+            
+            // 检查z-index层级
+            const testEl = document.createElement('div');
+            testEl.style.zIndex = '15';
+            document.body.appendChild(testEl);
+            const computedZIndex = window.getComputedStyle(testEl).zIndex;
+            document.body.removeChild(testEl);
+            
+            html += `<div class="${computedZIndex === '15' ? 'success' : 'error'}">z-index设置: ${computedZIndex === '15' ? '✓ 正常' : '✗ 异常'}</div>`;
+            
+            // 检查position支持
+            const positionSupported = CSS.supports('position', 'absolute');
+            html += `<div class="${positionSupported ? 'success' : 'error'}">position:absolute支持: ${positionSupported ? '✓ 支持' : '✗ 不支持'}</div>`;
+            
+            result.innerHTML = html;
+        }
+        
+        function testMainProject() {
+            const result = document.getElementById('main-result');
+            const svg = document.getElementById('main-svg');
+            const container = document.getElementById('main-test');
+            
+            try {
+                svg.innerHTML = '';
+                
+                const modules = ['module1', 'module2', 'module3'];
+                const connections = [
+                    ['module1', 'module2'],
+                    ['module2', 'module3'],
+                    ['module3', 'module1']
+                ];
+                
+                let html = '<h3>主项目环境测试结果：</h3>';
+                let successCount = 0;
+                
+                connections.forEach(([from, to], index) => {
+                    const fromEl = document.getElementById(from);
+                    const toEl = document.getElementById(to);
+                    
+                    if (!fromEl || !toEl) {
+                        html += `<div class="error">✗ 找不到模块: ${from} 或 ${to}</div>`;
+                        return;
+                    }
+                    
+                    const fromRect = fromEl.getBoundingClientRect();
+                    const toRect = toEl.getBoundingClientRect();
+                    const containerRect = container.getBoundingClientRect();
+                    
+                    const fromX = fromRect.left - containerRect.left + fromRect.width / 2;
+                    const fromY = fromRect.top - containerRect.top + fromRect.height / 2;
+                    const toX = toRect.left - containerRect.left + toRect.width / 2;
+                    const toY = toRect.top - containerRect.top + toRect.height / 2;
+                    
+                    html += `<div class="result">连接 ${from} -> ${to}: (${Math.round(fromX)}, ${Math.round(fromY)}) -> (${Math.round(toX)}, ${Math.round(toY)})</div>`;
+                    
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', fromX);
+                    line.setAttribute('y1', fromY);
+                    line.setAttribute('x2', toX);
+                    line.setAttribute('y2', toY);
+                    line.setAttribute('stroke', '#fff');
+                    line.setAttribute('stroke-width', '4');
+                    line.setAttribute('opacity', '0.8');
+                    line.setAttribute('stroke-dasharray', '5,5');
+                    
+                    svg.appendChild(line);
+                    successCount++;
+                });
+                
+                html += `<div class="${successCount === connections.length ? 'success' : 'warning'}">绘制结果: ${successCount}/${connections.length} 条连接线，SVG子元素: ${svg.children.length}</div>`;
+                
+                if (successCount === connections.length) {
+                    html += `<div class="success">✓ 如果你能看到上方白色虚线连接模块，说明连接线功能完全正常！</div>`;
+                } else {
+                    html += `<div class="error">✗ 连接线绘制不完整，请检查模块位置和坐标计算</div>`;
+                }
+                
+                result.innerHTML = html;
+                
+            } catch (error) {
+                result.innerHTML = `<div class="error">✗ 测试失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 页面加载后自动运行基础检查
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                checkBrowser();
+                checkSVG();
+            }, 500);
+        });
+    </script>
+</body>
+</html> 

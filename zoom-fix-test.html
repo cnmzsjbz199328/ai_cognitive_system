@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>缩放修复测试</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .zoom-btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .zoom-btn:hover {
+            background: linear-gradient(135deg, #2980b9, #1abc9c);
+            transform: translateY(-2px);
+        }
+        
+        .zoom-btn.danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .zoom-indicator {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0 15px;
+        }
+        
+        .test-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transform-origin: center center;
+            transition: transform 0.3s ease;
+            margin: 20px 0;
+            overflow: visible;
+        }
+        
+        .test-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 15;
+            pointer-events: none;
+            transform-origin: center center;
+        }
+        
+        .test-module {
+            position: absolute;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+            border: 2px solid #3498db;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            min-width: 120px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-module:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px rgba(52, 152, 219, 0.2);
+        }
+        
+        .connection-line {
+            stroke: #e74c3c;
+            stroke-width: 3;
+            opacity: 0.8;
+            fill: none;
+            transition: all 0.3s ease;
+        }
+        
+        .info {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            margin: 20px 0;
+        }
+        
+        .info.success { border-left: 5px solid #27ae60; }
+        .info.warning { border-left: 5px solid #f39c12; }
+        .info.error { border-left: 5px solid #e74c3c; }
+        
+        .debug-panel {
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 12px;
+            line-height: 1.4;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: white; margin-bottom: 30px;">🔧 缩放修复测试</h1>
+    
+    <div class="controls">
+        <button class="zoom-btn" onclick="setZoom(50)">50%</button>
+        <button class="zoom-btn" onclick="setZoom(75)">75%</button>
+        <button class="zoom-btn" onclick="setZoom(100)">100%</button>
+        <button class="zoom-btn" onclick="setZoom(125)">125%</button>
+        <button class="zoom-btn" onclick="setZoom(150)">150%</button>
+        <button class="zoom-btn" onclick="setZoom(200)">200%</button>
+        <span class="zoom-indicator" id="zoom-display">100%</span>
+        <button class="zoom-btn danger" onclick="resetState()">重置状态</button>
+        <button class="zoom-btn" onclick="runStressTest()">压力测试</button>
+    </div>
+    
+    <div class="test-container" id="test-container">
+        <svg class="test-svg" id="test-svg">
+            <!-- 连接线将在这里绘制 -->
+        </svg>
+        
+        <div class="test-module" id="module1" style="top: 80px; left: 100px;">
+            模块 A
+        </div>
+        <div class="test-module" id="module2" style="top: 80px; right: 100px;">
+            模块 B
+        </div>
+        <div class="test-module" id="module3" style="bottom: 80px; left: 100px;">
+            模块 C
+        </div>
+        <div class="test-module" id="module4" style="bottom: 80px; right: 100px;">
+            模块 D
+        </div>
+        <div class="test-module" id="module5" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            中心模块
+        </div>
+    </div>
+    
+    <div id="test-results" class="info">
+        <h3>测试结果：</h3>
+        <p>点击缩放按钮测试修复效果...</p>
+    </div>
+    
+    <div id="debug-console" class="debug-panel">
+        <strong>调试控制台:</strong><br>
+        等待测试命令...
+    </div>
+
+    <script>
+        let currentZoom = 100;
+        
+        const connections = [
+            ['module1', 'module5'],
+            ['module2', 'module5'],
+            ['module3', 'module5'],
+            ['module4', 'module5'],
+            ['module1', 'module2'],
+            ['module2', 'module4'],
+            ['module4', 'module3'],
+            ['module3', 'module1']
+        ];
+        
+        function updateZoomDisplay() {
+            document.getElementById('zoom-display').textContent = `${currentZoom}%`;
+        }
+        
+        function setZoom(zoom) {
+            currentZoom = zoom;
+            applyZoom();
+            logDebug(`手动设置缩放: ${zoom}%`);
+        }
+        
+        function applyZoom() {
+            const container = document.getElementById('test-container');
+            const svg = document.getElementById('test-svg');
+            
+            logDebug(`应用缩放: ${currentZoom}%`);
+            
+            // 应用容器缩放
+            container.style.transform = `scale(${currentZoom / 100})`;
+            
+            // 不缩放SVG，保持原始坐标系统
+            svg.style.transform = '';
+            svg.style.transformOrigin = '';
+            
+            updateZoomDisplay();
+            
+            // 延迟重绘连接线
+            setTimeout(() => {
+                drawConnections();
+                verifyAlignment();
+            }, 100);
+        }
+        
+        function resetState() {
+            logDebug('执行状态重置...');
+            
+            const container = document.getElementById('test-container');
+            const svg = document.getElementById('test-svg');
+            
+            // 清除所有变换
+            container.style.transform = '';
+            svg.style.transform = '';
+            
+            // 重置变量
+            currentZoom = 100;
+            updateZoomDisplay();
+            
+            // 重新绘制
+            setTimeout(() => {
+                drawConnections();
+                logDebug('状态重置完成');
+                logTest('状态已重置，缩放恢复到100%', 'success');
+            }, 100);
+        }
+        
+        function getModuleCenter(moduleId) {
+            const module = document.getElementById(moduleId);
+            if (!module) return { x: 0, y: 0 };
+            
+            const rect = module.getBoundingClientRect();
+            const container = document.getElementById('test-container');
+            const containerRect = container.getBoundingClientRect();
+            
+            // 计算相对于容器的中心点位置
+            let centerX = rect.left - containerRect.left + rect.width / 2;
+            let centerY = rect.top - containerRect.top + rect.height / 2;
+            
+            // 获取当前缩放比例并补偿坐标
+            const containerStyle = window.getComputedStyle(container);
+            const transform = containerStyle.transform;
+            
+            if (transform && transform !== 'none') {
+                const matrix = transform.match(/matrix\(([^)]+)\)/);
+                if (matrix) {
+                    const values = matrix[1].split(',').map(parseFloat);
+                    const scaleX = values[0];
+                    const scaleY = values[3];
+                    
+                    // 将缩放后的坐标转换为SVG原始坐标系统
+                    centerX = centerX / scaleX;
+                    centerY = centerY / scaleY;
+                }
+            }
+            
+            return { x: centerX, y: centerY };
+        }
+        
+        function drawConnections() {
+            const svg = document.getElementById('test-svg');
+            svg.innerHTML = '';
+            
+            let successCount = 0;
+            
+            connections.forEach(([from, to]) => {
+                const fromCenter = getModuleCenter(from);
+                const toCenter = getModuleCenter(to);
+                
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', fromCenter.x);
+                line.setAttribute('y1', fromCenter.y);
+                line.setAttribute('x2', toCenter.x);
+                line.setAttribute('y2', toCenter.y);
+                line.className = 'connection-line';
+                
+                svg.appendChild(line);
+                successCount++;
+            });
+            
+            logDebug(`连接线绘制: ${successCount}/${connections.length}条`);
+        }
+        
+        function verifyAlignment() {
+            const container = document.getElementById('test-container');
+            const svg = document.getElementById('test-svg');
+            
+            const containerTransform = container.style.transform;
+            const svgTransform = svg.style.transform;
+            
+            // SVG应该保持空transform
+            const isCorrect = (svgTransform === '' || svgTransform === 'none') && 
+                             containerTransform === `scale(${currentZoom / 100})`;
+            
+            logDebug(`对齐验证: ${isCorrect ? '✓ 正确' : '✗ 错误'}`);
+            logDebug(`容器缩放: ${containerTransform || 'none'}`);
+            logDebug(`SVG状态: ${svgTransform || 'none'} (应该为空)`);
+            
+            // 测试连接线是否正确对齐到模块中心
+            const lines = svg.querySelectorAll('line');
+            
+            if (lines.length > 0) {
+                // 测试第一条连接线
+                const line = lines[0];
+                const x1 = parseFloat(line.getAttribute('x1'));
+                const y1 = parseFloat(line.getAttribute('y1'));
+                
+                // 计算模块的实际中心位置（在SVG坐标系统中）
+                const moduleCenter = getModuleCenter('module1');
+                const tolerance = 2; // 允许2像素误差
+                
+                const aligned = Math.abs(x1 - moduleCenter.x) < tolerance && 
+                               Math.abs(y1 - moduleCenter.y) < tolerance;
+                
+                if (aligned) {
+                    logTest(`${currentZoom}% 缩放测试通过 ✓ (坐标补偿方案)`, 'success');
+                } else {
+                    logTest(`${currentZoom}% 缩放测试失败 ✗ (误差: ${Math.round(Math.abs(x1 - moduleCenter.x))}, ${Math.round(Math.abs(y1 - moduleCenter.y))})`, 'error');
+                }
+                
+                return aligned;
+            }
+            
+            return isCorrect;
+        }
+        
+        function runStressTest() {
+            logTest('开始压力测试...', 'warning');
+            
+            const zoomLevels = [50, 25, 75, 150, 200, 100, 60, 180, 90, 120];
+            let testIndex = 0;
+            
+            function nextTest() {
+                if (testIndex >= zoomLevels.length) {
+                    logTest('压力测试完成！', 'success');
+                    return;
+                }
+                
+                const zoom = zoomLevels[testIndex];
+                setZoom(zoom);
+                
+                setTimeout(() => {
+                    const passed = verifyAlignment();
+                    if (!passed) {
+                        logTest(`压力测试在 ${zoom}% 时失败`, 'error');
+                        return;
+                    }
+                    
+                    testIndex++;
+                    setTimeout(nextTest, 500);
+                }, 200);
+            }
+            
+            nextTest();
+        }
+        
+        function logTest(message, type = 'info') {
+            const results = document.getElementById('test-results');
+            const div = document.createElement('div');
+            div.className = `info ${type}`;
+            div.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            results.appendChild(div);
+            
+            // 保持最新的5条记录
+            const logs = results.children;
+            if (logs.length > 6) { // 保留标题
+                results.removeChild(logs[1]);
+            }
+        }
+        
+        function logDebug(message) {
+            const console = document.getElementById('debug-console');
+            const div = document.createElement('div');
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            console.appendChild(div);
+            
+            // 保持最新的20条记录
+            const logs = console.children;
+            if (logs.length > 21) { // 保留标题
+                console.removeChild(logs[1]);
+            }
+            
+            // 自动滚动到底部
+            console.scrollTop = console.scrollHeight;
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            logTest('缩放修复测试页面初始化', 'success');
+            logDebug('系统初始化完成');
+            
+            setTimeout(() => {
+                drawConnections();
+                verifyAlignment();
+                logDebug('初始状态验证完成');
+            }, 100);
+        });
+    </script>
+</body>
+</html> 

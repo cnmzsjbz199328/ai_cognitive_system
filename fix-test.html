@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>连接线修复测试</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .test-status {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            max-width: 400px;
+            font-family: monospace;
+        }
+        .success { color: #2ecc71; }
+        .error { color: #e74c3c; }
+        .warning { color: #f39c12; }
+        .test-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .test-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .test-btn:hover { background: #2980b9; }
+        .test-btn.success { background: #27ae60; }
+        .test-btn.error { background: #e74c3c; }
+        
+        /* 确保容器适当大小 */
+        .container {
+            min-height: 100vh;
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-status" id="test-status">
+        <strong>🔧 连接线修复测试</strong><br>
+        <span id="status-text">正在初始化...</span>
+    </div>
+
+    <div class="test-controls">
+        <div><strong>测试控制</strong></div>
+        <button class="test-btn" id="draw-btn" onclick="testDraw()">绘制连接线</button>
+        <button class="test-btn" id="toggle-btn" onclick="testToggle()">切换显示</button>
+        <button class="test-btn" id="mode-btn" onclick="testMode()">切换模式</button>
+        <button class="test-btn" id="simulation-btn" onclick="testSimulation()">测试模拟</button>
+        <div style="margin-top: 10px; font-size: 12px; color: #666;">
+            SVG路径数: <span id="path-count">0</span> | 
+            状态: <span id="connection-status">未知</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="system-title">
+            <h1>连接线修复测试</h1>
+        </div>
+
+        <svg class="connections-svg" id="connections-svg">
+            <!-- 连接线将在这里动态绘制 -->
+        </svg>
+
+        <!-- 测试模块 -->
+        <div class="module" id="external-stimuli" style="top: 120px; left: 150px;">
+            <div class="module-name">外部刺激</div>
+        </div>
+
+        <div class="module" id="perception" style="top: 120px; left: 400px;">
+            <div class="module-name">感知模块</div>
+        </div>
+
+        <div class="module" id="ai-cognitive" style="top: 220px; left: 275px;">
+            <div class="module-name">AI认知核心</div>
+        </div>
+
+        <div class="module" id="thinking-core" style="top: 320px; left: 275px;">
+            <div class="module-name">思维核心</div>
+        </div>
+
+        <div class="module" id="action-output" style="top: 420px; left: 275px;">
+            <div class="module-name">输出模块</div>
+        </div>
+    </div>
+
+    <script type="module">
+        let config, connections, animation, simulation;
+        const statusText = document.getElementById('status-text');
+        const pathCount = document.getElementById('path-count');
+        const connectionStatus = document.getElementById('connection-status');
+
+        function updateStatus(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            statusText.innerHTML = `${timestamp} - <span class="${type}">${message}</span>`;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function updateStats() {
+            const svg = document.getElementById('connections-svg');
+            const paths = svg.querySelectorAll('path');
+            pathCount.textContent = paths.length;
+            
+            if (config) {
+                connectionStatus.textContent = config.getShowConnections() ? '显示' : '隐藏';
+            }
+        }
+
+        async function initializeTest() {
+            try {
+                updateStatus('加载模块...', 'info');
+                
+                // 加载所有需要的模块
+                config = await import('./js/config.js');
+                connections = await import('./js/connections.js');
+                animation = await import('./js/animation.js');
+                simulation = await import('./js/simulation.js');
+                
+                updateStatus('模块加载成功！', 'success');
+                
+                // 初始化系统
+                animation.initializeAnimations();
+                
+                // 自动绘制连接线
+                setTimeout(() => {
+                    testDraw();
+                }, 500);
+                
+            } catch (error) {
+                updateStatus(`模块加载失败: ${error.message}`, 'error');
+                console.error('初始化失败:', error);
+            }
+        }
+
+        window.testDraw = function() {
+            if (!connections) {
+                updateStatus('连接模块未加载', 'error');
+                return;
+            }
+
+            try {
+                updateStatus('绘制连接线...', 'info');
+                connections.drawConnections();
+                
+                setTimeout(() => {
+                    const svg = document.getElementById('connections-svg');
+                    const paths = svg.querySelectorAll('path');
+                    
+                    if (paths.length > 0) {
+                        updateStatus(`成功绘制 ${paths.length} 条连接线`, 'success');
+                        document.getElementById('draw-btn').className = 'test-btn success';
+                    } else {
+                        updateStatus('连接线绘制失败 - 无路径生成', 'error');
+                        document.getElementById('draw-btn').className = 'test-btn error';
+                    }
+                    updateStats();
+                }, 100);
+                
+            } catch (error) {
+                updateStatus(`绘制错误: ${error.message}`, 'error');
+                document.getElementById('draw-btn').className = 'test-btn error';
+            }
+        };
+
+        window.testToggle = function() {
+            if (!connections) return;
+            
+            try {
+                connections.toggleConnections();
+                updateStatus('切换连接线显示状态', 'success');
+                updateStats();
+            } catch (error) {
+                updateStatus(`切换失败: ${error.message}`, 'error');
+            }
+        };
+
+        window.testMode = function() {
+            if (!connections) return;
+            
+            try {
+                const oldMode = config.getConnectionMode();
+                connections.toggleConnectionMode();
+                const newMode = config.getConnectionMode();
+                updateStatus(`连接模式: ${oldMode} → ${newMode}`, 'success');
+                updateStats();
+            } catch (error) {
+                updateStatus(`模式切换失败: ${error.message}`, 'error');
+            }
+        };
+
+        window.testSimulation = function() {
+            if (!simulation || !animation) return;
+            
+            try {
+                // 测试模拟动画
+                updateStatus('测试光点流动...', 'info');
+                animation.animateConnectionFlow('external-stimuli', 'perception');
+                
+                setTimeout(() => {
+                    updateStatus('光点流动测试完成', 'success');
+                }, 2000);
+                
+            } catch (error) {
+                updateStatus(`模拟测试失败: ${error.message}`, 'error');
+            }
+        };
+
+        // 开始初始化
+        initializeTest();
+
+        // 定期更新统计信息
+        setInterval(updateStats, 1000);
+    </script>
+</body>
+</html> 

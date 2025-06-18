@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>连接线测试</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body { 
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .test-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        .test-controls {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.95);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        .test-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 2px;
+        }
+        .test-btn:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <div class="test-info" id="test-info">
+        <strong>连接线测试</strong><br>
+        状态: 初始化中...
+    </div>
+    
+    <div class="test-controls">
+        <button class="test-btn" onclick="testDrawConnections()">绘制连接线</button>
+        <button class="test-btn" onclick="testToggleConnections()">切换显示</button>
+        <button class="test-btn" onclick="testToggleMode()">切换模式</button>
+        <button class="test-btn" onclick="testShowAnchors()">显示锚点</button>
+        <button class="test-btn" onclick="inspectSVG()">检查SVG</button>
+    </div>
+
+    <div class="container">
+        <svg class="connections-svg" id="connections-svg">
+            <!-- 连接线将在这里动态绘制 -->
+        </svg>
+
+        <!-- 简化的模块布局 -->
+        <div class="module" id="external-stimuli" style="top: 100px; left: 100px;">
+            <div class="module-name">外部刺激</div>
+        </div>
+
+        <div class="module" id="perception" style="top: 100px; left: 300px;">
+            <div class="module-name">感知模块</div>
+        </div>
+
+        <div class="module" id="ai-cognitive" style="top: 200px; left: 200px;">
+            <div class="module-name">AI认知核心</div>
+        </div>
+    </div>
+
+    <script type="module">
+        const info = document.getElementById('test-info');
+        
+        function updateInfo(message) {
+            info.innerHTML = '<strong>连接线测试</strong><br>' + message;
+            console.log('测试:', message);
+        }
+        
+        let connectionsModule, configModule;
+        
+        async function initTest() {
+            try {
+                updateInfo('加载模块...');
+                
+                configModule = await import('./js/config.js');
+                connectionsModule = await import('./js/connections.js');
+                
+                updateInfo('模块加载成功<br>配置状态: ' + JSON.stringify({
+                    showConnections: configModule.getShowConnections(),
+                    connectionMode: configModule.getConnectionMode()
+                }));
+                
+                // 立即尝试绘制
+                setTimeout(() => {
+                    testDrawConnections();
+                }, 500);
+                
+            } catch (error) {
+                updateInfo('❌ 模块加载失败: ' + error.message);
+                console.error('加载失败:', error);
+            }
+        }
+        
+        window.testDrawConnections = function() {
+            if (!connectionsModule) {
+                updateInfo('❌ 模块未加载');
+                return;
+            }
+            
+            try {
+                updateInfo('绘制连接线...');
+                connectionsModule.drawConnections();
+                
+                // 检查SVG内容
+                const svg = document.getElementById('connections-svg');
+                const paths = svg.querySelectorAll('path');
+                updateInfo(`连接线绘制完成<br>SVG路径数量: ${paths.length}<br>SVG内容: ${svg.innerHTML.substring(0, 100)}...`);
+                
+            } catch (error) {
+                updateInfo('❌ 绘制失败: ' + error.message);
+                console.error('绘制失败:', error);
+            }
+        };
+        
+        window.testToggleConnections = function() {
+            if (!connectionsModule) return;
+            
+            try {
+                connectionsModule.toggleConnections();
+                updateInfo('切换连接线显示状态<br>当前状态: ' + configModule.getShowConnections());
+            } catch (error) {
+                updateInfo('❌ 切换失败: ' + error.message);
+            }
+        };
+        
+        window.testToggleMode = function() {
+            if (!connectionsModule) return;
+            
+            try {
+                connectionsModule.toggleConnectionMode();
+                updateInfo('切换连接模式<br>当前模式: ' + configModule.getConnectionMode());
+            } catch (error) {
+                updateInfo('❌ 模式切换失败: ' + error.message);
+            }
+        };
+        
+        window.testShowAnchors = function() {
+            if (!connectionsModule) return;
+            
+            try {
+                connectionsModule.toggleAnchorPoints();
+                const svg = document.getElementById('connections-svg');
+                const anchors = svg.querySelectorAll('.anchor-point');
+                updateInfo('锚点切换完成<br>锚点数量: ' + anchors.length);
+            } catch (error) {
+                updateInfo('❌ 锚点切换失败: ' + error.message);
+            }
+        };
+        
+        window.inspectSVG = function() {
+            const svg = document.getElementById('connections-svg');
+            const rect = svg.getBoundingClientRect();
+            
+            updateInfo(`SVG检查:<br>
+                宽度: ${rect.width}px<br>
+                高度: ${rect.height}px<br>
+                子元素: ${svg.children.length}<br>
+                内容: ${svg.innerHTML || '(空)'}`);
+        };
+        
+        // 开始测试
+        initTest();
+    </script>
+</body>
+</html> 

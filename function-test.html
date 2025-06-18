@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>函数测试 - AI认知系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .test-button {
+            margin: 5px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            background: linear-gradient(135deg, #2980b9, #1abc9c);
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: rgba(46, 204, 113, 0.3);
+            color: #2ecc71;
+        }
+        
+        .status.error {
+            background: rgba(231, 76, 60, 0.3);
+            color: #e74c3c;
+        }
+        
+        .status.info {
+            background: rgba(52, 152, 219, 0.3);
+            color: #3498db;
+        }
+        
+        .function-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .function-item {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .available {
+            border-left: 4px solid #2ecc71;
+        }
+        
+        .missing {
+            border-left: 4px solid #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 AI认知系统函数测试</h1>
+        
+        <div class="test-section">
+            <h2>📋 函数可用性检查</h2>
+            <div id="function-status"></div>
+            <button class="test-button" onclick="checkFunctions()">检查所有函数</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎮 模拟控制测试</h2>
+            <button class="test-button" onclick="testStartSimulation()">测试启动模拟</button>
+            <button class="test-button" onclick="testStopSimulation()">测试停止模拟</button>
+            <button class="test-button" onclick="testResetSimulation()">测试重置模拟</button>
+            <div id="simulation-status" class="status info">等待测试...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔗 连接线控制测试</h2>
+            <button class="test-button" onclick="testToggleConnections()">测试切换连接线</button>
+            <button class="test-button" onclick="testToggleConnectionMode()">测试切换连接模式</button>
+            <button class="test-button" onclick="testToggleAnchorPoints()">测试切换锚点</button>
+            <div id="connection-status" class="status info">等待测试...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔍 系统信息</h2>
+            <div id="system-info"></div>
+            <button class="test-button" onclick="showSystemInfo()">显示系统信息</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 实时监控</h2>
+            <div id="monitor-info"></div>
+            <button class="test-button" onclick="startMonitoring()">开始监控</button>
+            <button class="test-button" onclick="stopMonitoring()">停止监控</button>
+        </div>
+    </div>
+
+    <!-- 简化的测试模块 -->
+    <div style="position: absolute; top: -1000px;">
+        <div class="module" id="test-module" style="width: 100px; height: 50px;"></div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+    
+    <script>
+        let monitorInterval = null;
+
+        // 检查所有函数是否可用
+        function checkFunctions() {
+            const functions = [
+                'startSimulation',
+                'stopSimulation', 
+                'resetSimulation',
+                'toggleConnections',
+                'toggleConnectionMode',
+                'toggleAnchorPoints'
+            ];
+            
+            const statusDiv = document.getElementById('function-status');
+            let html = '<div class="function-list">';
+            let allAvailable = true;
+            
+            functions.forEach(funcName => {
+                const isAvailable = typeof window[funcName] === 'function';
+                const className = isAvailable ? 'available' : 'missing';
+                const status = isAvailable ? '✅' : '❌';
+                
+                html += `<div class="function-item ${className}">${status} ${funcName}</div>`;
+                
+                if (!isAvailable) {
+                    allAvailable = false;
+                }
+            });
+            
+            html += '</div>';
+            
+            if (allAvailable) {
+                html += '<div class="status success">✅ 所有函数都可用！</div>';
+            } else {
+                html += '<div class="status error">❌ 有函数缺失，请检查模块加载情况</div>';
+            }
+            
+            statusDiv.innerHTML = html;
+        }
+
+        // 测试模拟控制
+        function testStartSimulation() {
+            try {
+                if (typeof startSimulation === 'function') {
+                    startSimulation();
+                    updateStatus('simulation-status', '✅ 启动模拟测试成功', 'success');
+                } else {
+                    updateStatus('simulation-status', '❌ startSimulation 函数未定义', 'error');
+                }
+            } catch (error) {
+                updateStatus('simulation-status', '❌ 启动模拟测试失败: ' + error.message, 'error');
+            }
+        }
+
+        function testStopSimulation() {
+            try {
+                if (typeof stopSimulation === 'function') {
+                    stopSimulation();
+                    updateStatus('simulation-status', '✅ 停止模拟测试成功', 'success');
+                } else {
+                    updateStatus('simulation-status', '❌ stopSimulation 函数未定义', 'error');
+                }
+            } catch (error) {
+                updateStatus('simulation-status', '❌ 停止模拟测试失败: ' + error.message, 'error');
+            }
+        }
+
+        function testResetSimulation() {
+            try {
+                if (typeof resetSimulation === 'function') {
+                    resetSimulation();
+                    updateStatus('simulation-status', '✅ 重置模拟测试成功', 'success');
+                } else {
+                    updateStatus('simulation-status', '❌ resetSimulation 函数未定义', 'error');
+                }
+            } catch (error) {
+                updateStatus('simulation-status', '❌ 重置模拟测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 测试连接线控制
+        function testToggleConnections() {
+            try {
+                if (typeof toggleConnections === 'function') {
+                    toggleConnections();
+                    updateStatus('connection-status', '✅ 切换连接线测试成功', 'success');
+                } else {
+                    updateStatus('connection-status', '❌ toggleConnections 函数未定义', 'error');
+                }
+            } catch (error) {
+                updateStatus('connection-status', '❌ 切换连接线测试失败: ' + error.message, 'error');
+            }
+        }
+
+        function testToggleConnectionMode() {
+            try {
+                if (typeof toggleConnectionMode === 'function') {
+                    toggleConnectionMode();
+                    updateStatus('connection-status', '✅ 切换连接模式测试成功', 'success');
+                } else {
+                    updateStatus('connection-status', '❌ toggleConnectionMode 函数未定义', 'error');
+                }
+            } catch (error) {
+                updateStatus('connection-status', '❌ 切换连接模式测试失败: ' + error.message, 'error');
+            }
+        }
+
+        function testToggleAnchorPoints() {
+            try {
+                if (typeof toggleAnchorPoints === 'function') {
+                    toggleAnchorPoints();
+                    updateStatus('connection-status', '✅ 切换锚点测试成功', 'success');
+                } else {
+                    updateStatus('connection-status', '❌ toggleAnchorPoints 函数未定义', 'error');
+                }
+            } catch (error) {
+                updateStatus('connection-status', '❌ 切换锚点测试失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示系统信息
+        function showSystemInfo() {
+            const info = {
+                '系统对象': typeof window.AICognitiveSystem,
+                '调试对象': typeof window.debugAI,
+                '用户代理': navigator.userAgent.substring(0, 50) + '...',
+                '视口大小': `${window.innerWidth} x ${window.innerHeight}`,
+                '时间戳': new Date().toLocaleString()
+            };
+            
+            let html = '<div class="function-list">';
+            for (const [key, value] of Object.entries(info)) {
+                html += `<div class="function-item available"><strong>${key}:</strong> ${value}</div>`;
+            }
+            html += '</div>';
+            
+            document.getElementById('system-info').innerHTML = html;
+        }
+
+        // 开始监控
+        function startMonitoring() {
+            if (monitorInterval) {
+                clearInterval(monitorInterval);
+            }
+            
+            monitorInterval = setInterval(() => {
+                const monitor = document.getElementById('monitor-info');
+                const now = new Date().toLocaleString();
+                const memUsage = performance.memory ? 
+                    `${Math.round(performance.memory.usedJSHeapSize / 1024 / 1024)}MB` : 
+                    '不支持';
+                
+                monitor.innerHTML = `
+                    <div class="status info">
+                        🕒 ${now}<br>
+                        💾 内存使用: ${memUsage}<br>
+                        🔧 AICognitiveSystem: ${typeof window.AICognitiveSystem}<br>
+                        📊 模块数量: ${document.querySelectorAll('.module').length}
+                    </div>
+                `;
+            }, 1000);
+            
+            updateStatus('monitor-info', '✅ 监控已启动', 'success');
+        }
+
+        // 停止监控
+        function stopMonitoring() {
+            if (monitorInterval) {
+                clearInterval(monitorInterval);
+                monitorInterval = null;
+                updateStatus('monitor-info', '⏹️ 监控已停止', 'info');
+            }
+        }
+
+        // 更新状态显示
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.className = `status ${type}`;
+            element.textContent = message;
+        }
+
+        // 页面加载完成后自动检查
+        setTimeout(() => {
+            checkFunctions();
+            showSystemInfo();
+        }, 1000);
+    </script>
+</body>
+</html> 

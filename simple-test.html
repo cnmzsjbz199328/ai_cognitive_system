@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>简单线条测试</title>
+    <style>
+        body { margin: 20px; font-family: Arial, sans-serif; }
+        .test-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border: 2px solid black;
+            background: #f9f9f9;
+        }
+        .test-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+        .test-module {
+            position: absolute;
+            background: lightblue;
+            border: 2px solid navy;
+            padding: 10px;
+            z-index: 5;
+        }
+        #testmod1 { top: 100px; left: 100px; }
+        #testmod2 { top: 100px; left: 400px; }
+        #testmod3 { top: 300px; left: 250px; }
+    </style>
+</head>
+<body>
+    <h1>超级简单的SVG线条测试</h1>
+    
+    <h2>测试1: 静态SVG线条</h2>
+    <svg width="400" height="200" style="border: 1px solid red;">
+        <line x1="10" y1="10" x2="390" y2="190" stroke="blue" stroke-width="3"/>
+        <line x1="10" y1="190" x2="390" y2="10" stroke="red" stroke-width="3"/>
+        <text x="200" y="100" text-anchor="middle" fill="green">如果你能看到这些线条，SVG功能正常</text>
+    </svg>
+    
+    <h2>测试2: 动态绘制的线条</h2>
+    <div class="test-container">
+        <svg class="test-svg" id="dynamic-svg" xmlns="http://www.w3.org/2000/svg">
+            <!-- 动态线条会在这里 -->
+        </svg>
+        
+        <div class="test-module" id="testmod1">模块A</div>
+        <div class="test-module" id="testmod2">模块B</div>
+        <div class="test-module" id="testmod3">模块C</div>
+    </div>
+    
+    <button onclick="testDraw()" style="margin: 10px; padding: 10px 20px; font-size: 16px;">绘制动态线条</button>
+    <button onclick="clearDraw()" style="margin: 10px; padding: 10px 20px; font-size: 16px;">清除线条</button>
+    
+    <div id="result" style="margin: 20px; padding: 10px; background: #efefef;"></div>
+
+    <script>
+        function testDraw() {
+            console.log('开始测试绘制');
+            const svg = document.getElementById('dynamic-svg');
+            const result = document.getElementById('result');
+            
+            result.innerHTML = '<h3>绘制过程:</h3>';
+            
+            if (!svg) {
+                result.innerHTML += '<p style="color: red;">错误：找不到SVG元素</p>';
+                return;
+            }
+            
+            result.innerHTML += '<p>✓ SVG元素找到</p>';
+            svg.innerHTML = '';
+            
+            // 获取容器
+            const container = svg.parentElement;
+            const containerRect = container.getBoundingClientRect();
+            result.innerHTML += `<p>✓ 容器尺寸: ${container.clientWidth} x ${container.clientHeight}</p>`;
+            
+            // 绘制连接线
+            const modules = ['testmod1', 'testmod2', 'testmod3'];
+            const connections = [
+                ['testmod1', 'testmod2'],
+                ['testmod2', 'testmod3'],
+                ['testmod3', 'testmod1']
+            ];
+            
+            connections.forEach(([from, to], index) => {
+                const fromEl = document.getElementById(from);
+                const toEl = document.getElementById(to);
+                
+                if (!fromEl || !toEl) {
+                    result.innerHTML += `<p style="color: red;">错误：找不到模块 ${from} 或 ${to}</p>`;
+                    return;
+                }
+                
+                const fromRect = fromEl.getBoundingClientRect();
+                const toRect = toEl.getBoundingClientRect();
+                
+                const fromX = fromRect.left - containerRect.left + fromRect.width / 2;
+                const fromY = fromRect.top - containerRect.top + fromRect.height / 2;
+                const toX = toRect.left - containerRect.left + toRect.width / 2;
+                const toY = toRect.top - containerRect.top + toRect.height / 2;
+                
+                result.innerHTML += `<p>连接 ${from} -> ${to}: (${Math.round(fromX)}, ${Math.round(fromY)}) -> (${Math.round(toX)}, ${Math.round(toY)})</p>`;
+                
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', fromX);
+                line.setAttribute('y1', fromY);
+                line.setAttribute('x2', toX);
+                line.setAttribute('y2', toY);
+                line.setAttribute('stroke', 'red');
+                line.setAttribute('stroke-width', '4');
+                line.setAttribute('opacity', '0.8');
+                
+                svg.appendChild(line);
+                result.innerHTML += `<p style="color: green;">✓ 线条 ${index + 1} 已添加</p>`;
+            });
+            
+            result.innerHTML += `<p><strong>最终结果：SVG中有 ${svg.children.length} 条线</strong></p>`;
+        }
+        
+        function clearDraw() {
+            const svg = document.getElementById('dynamic-svg');
+            if (svg) {
+                svg.innerHTML = '';
+                document.getElementById('result').innerHTML = '<p>已清除所有线条</p>';
+            }
+        }
+        
+        // 页面加载后自动测试
+        window.addEventListener('load', function() {
+            setTimeout(testDraw, 500);
+        });
+    </script>
+</body>
+</html> 

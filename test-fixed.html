@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI认知系统 - 修复测试</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* 额外的调试样式 */
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        
+        .test-results {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,128,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        
+        .error-info {
+            background: rgba(128,0,0,0.8) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info" id="debug-info">
+        <div>🔧 调试信息</div>
+        <div id="status">正在加载...</div>
+        <div id="modules-count">模块数量: -</div>
+        <div id="connections-count">连接线数量: -</div>
+        <div id="errors">错误: 无</div>
+    </div>
+    
+    <div class="test-results" id="test-results">
+        <div>🧪 测试结果</div>
+        <div id="test-status">等待测试...</div>
+    </div>
+
+    <div class="container">
+        <div class="system-title">
+            <h1>AI认知系统 - 修复测试版</h1>
+        </div>
+
+        <svg class="connections-svg" id="connections-svg">
+            <!-- 连接线将在这里动态绘制 -->
+        </svg>
+
+        <!-- 简化的模块布局 -->
+        <div class="module" id="external-stimuli" style="top: 100px; left: 100px;">
+            <div class="module-name">External Stimuli<br>外部刺激</div>
+        </div>
+
+        <div class="module" id="perception" style="top: 100px; left: 300px;">
+            <div class="module-name">Perception<br>感知模块</div>
+        </div>
+
+        <div class="module" id="ai-cognitive" style="top: 200px; left: 200px;">
+            <div class="module-name">AI Core<br>AI核心</div>
+        </div>
+        
+        <div class="module" id="thinking-core" style="top: 300px; left: 200px;">
+            <div class="module-name">Thinking<br>思维核心</div>
+        </div>
+
+        <div class="module" id="action-output" style="top: 400px; left: 200px;">
+            <div class="module-name">Output<br>输出模块</div>
+        </div>
+
+        <div class="info-panel">
+            <div class="info-title">当前状态</div>
+            <div class="info-content" id="current-info">
+                测试系统就绪
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <button class="btn btn-primary" onclick="testStartSimulation()">🚀 测试启动</button>
+            <button class="btn btn-secondary" onclick="testStopSimulation()">⏹️ 测试停止</button>
+            <button class="btn btn-secondary" onclick="testResetSimulation()">🔄 测试重置</button>
+            <button class="btn btn-toggle" onclick="testToggleConnections()">🔗 切换连接线</button>
+            <button class="btn btn-secondary" onclick="runFullTest()">🧪 运行完整测试</button>
+            <div class="control-hint">
+                修复后的系统测试
+            </div>
+        </div>
+    </div>
+
+    <!-- 测试脚本 -->
+    <script type="module">
+        let testResults = {
+            moduleLoad: false,
+            connectionsDrawn: false,
+            buttonsResponsive: false,
+            noErrors: true
+        };
+        
+        // 测试函数
+        window.testStartSimulation = function() {
+            try {
+                if (window.AICognitiveSystem && window.AICognitiveSystem.startSimulation) {
+                    window.AICognitiveSystem.startSimulation();
+                    updateTestResult('buttonsResponsive', true);
+                    updateDebugInfo('✅ 启动按钮响应正常');
+                } else {
+                    throw new Error('AICognitiveSystem.startSimulation 不存在');
+                }
+            } catch (error) {
+                updateTestResult('buttonsResponsive', false);
+                updateDebugInfo('❌ 启动按钮错误: ' + error.message);
+            }
+        };
+        
+        window.testStopSimulation = function() {
+            try {
+                if (window.AICognitiveSystem && window.AICognitiveSystem.stopSimulation) {
+                    window.AICognitiveSystem.stopSimulation();
+                    updateDebugInfo('✅ 停止按钮响应正常');
+                } else {
+                    throw new Error('AICognitiveSystem.stopSimulation 不存在');
+                }
+            } catch (error) {
+                updateDebugInfo('❌ 停止按钮错误: ' + error.message);
+            }
+        };
+        
+        window.testResetSimulation = function() {
+            try {
+                if (window.AICognitiveSystem && window.AICognitiveSystem.resetSimulation) {
+                    window.AICognitiveSystem.resetSimulation();
+                    updateDebugInfo('✅ 重置按钮响应正常');
+                } else {
+                    throw new Error('AICognitiveSystem.resetSimulation 不存在');
+                }
+            } catch (error) {
+                updateDebugInfo('❌ 重置按钮错误: ' + error.message);
+            }
+        };
+        
+        window.testToggleConnections = function() {
+            try {
+                if (window.AICognitiveSystem && window.AICognitiveSystem.toggleConnections) {
+                    window.AICognitiveSystem.toggleConnections();
+                    updateDebugInfo('✅ 连接线切换响应正常');
+                } else {
+                    throw new Error('AICognitiveSystem.toggleConnections 不存在');
+                }
+            } catch (error) {
+                updateDebugInfo('❌ 连接线切换错误: ' + error.message);
+            }
+        };
+        
+        window.runFullTest = function() {
+            updateDebugInfo('🧪 运行完整测试...');
+            
+            setTimeout(() => {
+                checkModules();
+                checkConnections();
+                checkAPI();
+                showFinalResults();
+            }, 500);
+        };
+        
+        function checkModules() {
+            const modules = document.querySelectorAll('.module');
+            updateTestResult('moduleLoad', modules.length > 0);
+            updateDebugInfo(`模块数量: ${modules.length}`);
+        }
+        
+        function checkConnections() {
+            const connections = document.querySelectorAll('.connection-line');
+            updateTestResult('connectionsDrawn', connections.length > 0);
+            updateDebugInfo(`连接线数量: ${connections.length}`);
+        }
+        
+        function checkAPI() {
+            const hasAPI = window.AICognitiveSystem && 
+                          typeof window.AICognitiveSystem.startSimulation === 'function';
+            updateTestResult('buttonsResponsive', hasAPI);
+            updateDebugInfo(`API可用: ${hasAPI ? '是' : '否'}`);
+        }
+        
+        function updateTestResult(test, passed) {
+            testResults[test] = passed;
+            updateDebugInfo(`${test}: ${passed ? '✅' : '❌'}`);
+        }
+        
+        function updateDebugInfo(message) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = message;
+            
+            const errorsDiv = document.getElementById('errors');
+            if (message.includes('❌')) {
+                errorsDiv.innerHTML = message;
+                document.getElementById('debug-info').classList.add('error-info');
+                testResults.noErrors = false;
+            }
+        }
+        
+        function showFinalResults() {
+            const passed = Object.values(testResults).every(result => result === true);
+            const resultDiv = document.getElementById('test-status');
+            
+            if (passed) {
+                resultDiv.innerHTML = '🎉 所有测试通过！<br>系统修复成功';
+                resultDiv.style.color = '#00ff00';
+            } else {
+                resultDiv.innerHTML = '⚠️ 部分测试失败<br>需要进一步调试';
+                resultDiv.style.color = '#ffff00';
+            }
+        }
+        
+        // 导入主系统
+        try {
+            const { initializeSystem } = await import('./js/main.js');
+            
+            updateDebugInfo('✅ 模块加载成功');
+            updateTestResult('moduleLoad', true);
+            
+            // 等待初始化完成
+            setTimeout(() => {
+                checkConnections();
+                checkAPI();
+            }, 1000);
+            
+        } catch (error) {
+            updateDebugInfo('❌ 模块加载失败: ' + error.message);
+            updateTestResult('moduleLoad', false);
+            updateTestResult('noErrors', false);
+            console.error('Module loading error:', error);
+        }
+        
+        // 错误捕获
+        window.addEventListener('error', function(e) {
+            updateDebugInfo('❌ 全局错误: ' + e.message);
+            updateTestResult('noErrors', false);
+        });
+        
+        // 定期更新模块和连接线计数
+        setInterval(() => {
+            const modulesCount = document.querySelectorAll('.module').length;
+            const connectionsCount = document.querySelectorAll('.connection-line').length;
+            
+            document.getElementById('modules-count').textContent = `模块数量: ${modulesCount}`;
+            document.getElementById('connections-count').textContent = `连接线数量: ${connectionsCount}`;
+        }, 1000);
+    </script>
+</body>
+</html> 

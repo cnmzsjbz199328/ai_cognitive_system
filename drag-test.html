@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拖拽系统测试 - AI认知系统</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .debug-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            z-index: 1000;
+            min-width: 250px;
+        }
+        
+        .debug-title {
+            color: #00ff88;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .debug-item {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .debug-label {
+            color: #66ccff;
+        }
+        
+        .debug-value {
+            color: #ffcc66;
+        }
+        
+        .test-buttons {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .test-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-btn:hover {
+            background: linear-gradient(135deg, #2980b9, #1abc9c);
+            transform: translateY(-2px);
+        }
+        
+        .coordinate-display {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 11px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="system-title">
+            <h1>拖拽系统测试 - AI认知系统</h1>
+        </div>
+
+        <svg class="connections-svg" id="connections-svg">
+            <!-- 连接线将在这里动态绘制 -->
+        </svg>
+
+        <!-- 测试模块 -->
+        <div class="module" id="global-time" style="top: 580px; left: 150px;">
+            <div class="module-name">Global Time System<br>Temporal Coordination</div>
+        </div>
+
+        <div class="module" id="external-stimuli" style="top: 180px; left: 150px;">
+            <div class="module-name">External Stimuli<br>Information Input</div>
+        </div>
+
+        <div class="module" id="perception" style="top: 380px; left: 150px;">
+            <div class="module-name">Perception & Input<br>Sensory Processing</div>
+        </div>
+
+        <div class="module" id="ai-cognitive" style="top: 180px; left: 480px;">
+            <div class="module-name">AI Cognitive Core<br>Central Processing</div>
+        </div>
+
+        <div class="module" id="thinking-core" style="top: 280px; left: 50%; transform: translateX(-50%);">
+            <div class="module-name">Thinking Core<br>Decision Making</div>
+        </div>
+
+        <div class="module" id="personality" style="top: 380px; left: 1180px;">
+            <div class="module-name">Personality & Emotion<br>Character Traits</div>
+        </div>
+
+        <div class="module" id="memory" style="top: 380px; left: 480px;">
+            <div class="module-name">Memory System<br>Information Storage</div>
+        </div>
+
+        <div class="control-panel">
+            <button class="btn btn-secondary" onclick="resetModulePositions()">重置位置</button>
+            <button class="btn btn-toggle" id="connections-toggle" onclick="toggleConnections()">隐藏连接线</button>
+            <div class="speed-control">
+                <span>缩放:</span>
+                <input type="range" class="speed-slider" min="50" max="150" value="100" id="zoom-slider">
+            </div>
+        </div>
+    </div>
+
+    <!-- 调试面板 -->
+    <div class="debug-panel" id="debug-panel">
+        <div class="debug-title">🔧 拖拽调试信息</div>
+        <div class="debug-item">
+            <span class="debug-label">拖拽状态:</span>
+            <span class="debug-value" id="drag-status">未拖拽</span>
+        </div>
+        <div class="debug-item">
+            <span class="debug-label">当前模块:</span>
+            <span class="debug-value" id="current-module">无</span>
+        </div>
+        <div class="debug-item">
+            <span class="debug-label">鼠标坐标:</span>
+            <span class="debug-value" id="mouse-coords">-</span>
+        </div>
+        <div class="debug-item">
+            <span class="debug-label">容器坐标:</span>
+            <span class="debug-value" id="container-coords">-</span>
+        </div>
+        <div class="debug-item">
+            <span class="debug-label">偏移量:</span>
+            <span class="debug-value" id="drag-offset">-</span>
+        </div>
+        <div class="debug-item">
+            <span class="debug-label">容器缩放:</span>
+            <span class="debug-value" id="container-scale">1.0</span>
+        </div>
+        <div class="debug-item">
+            <span class="debug-label">性能:</span>
+            <span class="debug-value" id="performance">60fps</span>
+        </div>
+    </div>
+
+    <!-- 测试按钮 -->
+    <div class="test-buttons">
+        <button class="test-btn" onclick="testZoom(0.8)">缩放 80%</button>
+        <button class="test-btn" onclick="testZoom(1.0)">缩放 100%</button>
+        <button class="test-btn" onclick="testZoom(1.2)">缩放 120%</button>
+        <button class="test-btn" onclick="showDebugGrid()">显示网格</button>
+    </div>
+
+    <!-- 坐标显示 -->
+    <div class="coordinate-display" id="coordinate-display">
+        <div>鼠标: <span id="mouse-display">0, 0</span></div>
+        <div>容器: <span id="container-display">0, 0</span></div>
+    </div>
+
+    <script type="module">
+        import { initializeSystem } from './js/main.js';
+        import { getDragState, resetModulePositions } from './js/dragdrop.js';
+        import { toggleConnections } from './js/connections.js';
+
+        // 全局函数
+        window.resetModulePositions = resetModulePositions;
+        window.toggleConnections = toggleConnections;
+
+        // 调试变量
+        let frameCount = 0;
+        let lastTime = performance.now();
+
+        // 初始化系统
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🧪 初始化拖拽测试系统...');
+            initializeSystem();
+            startDebugMonitoring();
+        });
+
+        // 缩放测试
+        window.testZoom = function(scale) {
+            const container = document.querySelector('.container');
+            container.style.transform = `scale(${scale})`;
+            updateDebugInfo();
+        };
+
+        // 显示调试网格
+        window.showDebugGrid = function() {
+            const existingGrid = document.getElementById('debug-grid');
+            if (existingGrid) {
+                existingGrid.remove();
+                return;
+            }
+
+            const grid = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            grid.id = 'debug-grid';
+            grid.style.cssText = `
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                z-index: 0; pointer-events: none; opacity: 0.3;
+            `;
+
+            // 创建网格线
+            for (let x = 0; x < 2000; x += 50) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x);
+                line.setAttribute('y1', 0);
+                line.setAttribute('x2', x);
+                line.setAttribute('y2', 1000);
+                line.setAttribute('stroke', '#00ff88');
+                line.setAttribute('stroke-width', '0.5');
+                grid.appendChild(line);
+            }
+
+            for (let y = 0; y < 1000; y += 50) {
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', 0);
+                line.setAttribute('y1', y);
+                line.setAttribute('x2', 2000);
+                line.setAttribute('y2', y);
+                line.setAttribute('stroke', '#00ff88');
+                line.setAttribute('stroke-width', '0.5');
+                grid.appendChild(line);
+            }
+
+            document.querySelector('.container').appendChild(grid);
+        };
+
+        // 启动调试监控
+        function startDebugMonitoring() {
+            function updateDebug() {
+                updateDebugInfo();
+                updatePerformance();
+                requestAnimationFrame(updateDebug);
+            }
+            updateDebug();
+
+            // 鼠标移动监控
+            document.addEventListener('mousemove', (e) => {
+                updateMouseCoords(e.clientX, e.clientY);
+            });
+
+            // 缩放滑块
+            document.getElementById('zoom-slider').addEventListener('input', (e) => {
+                const scale = parseInt(e.target.value) / 100;
+                testZoom(scale);
+            });
+        }
+
+        // 更新调试信息
+        function updateDebugInfo() {
+            const dragState = getDragState();
+            
+            document.getElementById('drag-status').textContent = 
+                dragState.isDragging ? '拖拽中' : '未拖拽';
+            
+            document.getElementById('current-module').textContent = 
+                dragState.dragTarget ? dragState.dragTarget.id : '无';
+            
+            document.getElementById('drag-offset').textContent = 
+                `${Math.round(dragState.dragOffset.x)}, ${Math.round(dragState.dragOffset.y)}`;
+            
+            document.getElementById('container-scale').textContent = 
+                `${dragState.containerScale.scaleX.toFixed(2)}`;
+        }
+
+        // 更新鼠标坐标
+        function updateMouseCoords(clientX, clientY) {
+            document.getElementById('mouse-coords').textContent = `${clientX}, ${clientY}`;
+            document.getElementById('mouse-display').textContent = `${clientX}, ${clientY}`;
+            
+            // 转换为容器坐标
+            const container = document.querySelector('.container');
+            const rect = container.getBoundingClientRect();
+            const transform = window.getComputedStyle(container).transform;
+            
+            let scale = 1;
+            if (transform && transform !== 'none') {
+                const matrix = transform.match(/matrix\(([^)]+)\)/);
+                if (matrix) {
+                    scale = parseFloat(matrix[1].split(',')[0]);
+                }
+            }
+            
+            const containerX = (clientX - rect.left) / scale;
+            const containerY = (clientY - rect.top) / scale;
+            
+            document.getElementById('container-coords').textContent = 
+                `${Math.round(containerX)}, ${Math.round(containerY)}`;
+            document.getElementById('container-display').textContent = 
+                `${Math.round(containerX)}, ${Math.round(containerY)}`;
+        }
+
+        // 更新性能信息
+        function updatePerformance() {
+            frameCount++;
+            const currentTime = performance.now();
+            
+            if (currentTime - lastTime >= 1000) {
+                const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
+                document.getElementById('performance').textContent = `${fps}fps`;
+                frameCount = 0;
+                lastTime = currentTime;
+            }
+        }
+
+        console.log('✅ 拖拽测试系统初始化完成');
+    </script>
+</body>
+</html> 
