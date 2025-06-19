@@ -6,4 +6,5 @@ export const state = {
         y: 0,
         k: 1,
     },
+    selectedNodeId: null,
 }; 

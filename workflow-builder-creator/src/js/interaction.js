@@ -20,6 +20,7 @@ export class InteractionManager {
         this.renderer.svg.addEventListener('mousedown', this.onMouseDown.bind(this));
         document.addEventListener('mousemove', this.onMouseMove.bind(this));
         document.addEventListener('mouseup', this.onMouseUp.bind(this));
+        document.addEventListener('keydown', this.onKeyDown.bind(this));
         this.renderer.svg.addEventListener('wheel', this.onWheel.bind(this), { passive: false });
         this.renderer.svg.style.cursor = 'grab';
     }
@@ -46,6 +47,7 @@ export class InteractionManager {
 
         const targetElement = e.target.closest('.node-group');
         if (e.button === 0 && targetElement) { // Left-click on node
+            this.state.selectedNodeId = targetElement.id;
             this.isDraggingNode = true;
             this.draggedNode = this.state.nodes.find(n => n.id === targetElement.id);
             if (!this.draggedNode) return;
@@ -55,6 +57,7 @@ export class InteractionManager {
             this.offset.y = point.y - this.draggedNode.position.y;
 
         } else if (e.button === 0) { // Left-click on background
+            this.state.selectedNodeId = null;
             this.isPanning = true;
             this.panStart.x = e.clientX - this.state.transform.x;
             this.panStart.y = e.clientY - this.state.transform.y;
@@ -109,6 +112,20 @@ export class InteractionManager {
         this.isPanning = false;
         this.draggedNode = null;
         this.renderer.svg.style.cursor = 'grab';
+    }
+
+    onKeyDown(e) {
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (this.state.selectedNodeId) {
+                this.deleteNode(this.state.selectedNodeId);
+            }
+        }
+    }
+
+    deleteNode(nodeId) {
+        this.state.nodes = this.state.nodes.filter(node => node.id !== nodeId);
+        this.state.connections = this.state.connections.filter(conn => conn.source !== nodeId && conn.target !== nodeId);
+        this.state.selectedNodeId = null;
     }
 
     onWheel(e) {

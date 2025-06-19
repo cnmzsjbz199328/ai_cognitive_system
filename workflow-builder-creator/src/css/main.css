@@ -99,4 +99,9 @@ button:hover {
 #animation-controls button:hover {
     background-color: var(--node-border-color);
     border-color: var(--accent-color);
+}
+
+.node-group.selected > rect {
+    stroke: var(--accent-color);
+    filter: drop-shadow(0 0 5px var(--accent-color));
 } 

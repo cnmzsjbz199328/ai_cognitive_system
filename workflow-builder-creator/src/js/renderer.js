@@ -36,11 +36,11 @@ export class Renderer {
     render(state, particles = []) {
         this.worldGroup.setAttribute('transform', `translate(${state.transform.x}, ${state.transform.y}) scale(${state.transform.k})`);
         this.renderConnections(state.connections, state.nodes);
-        this.renderNodes(state.nodes);
+        this.renderNodes(state.nodes, state.selectedNodeId);
         this.renderParticles(particles, state);
     }
 
-    renderNodes(nodes) {
+    renderNodes(nodes, selectedNodeId) {
         this.nodesLayer.innerHTML = '';
         nodes.forEach(node => {
             const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -48,6 +48,10 @@ export class Renderer {
             group.setAttribute('class', 'node-group');
             group.setAttribute('transform', `translate(${node.position.x}, ${node.position.y})`);
             
+            if (node.id === selectedNodeId) {
+                group.classList.add('selected');
+            }
+
             const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             rect.setAttribute('width', config.node.width);
             rect.setAttribute('height', config.node.height);
