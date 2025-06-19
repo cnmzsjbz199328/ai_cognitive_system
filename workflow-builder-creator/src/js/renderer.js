@@ -3,7 +3,7 @@ import { config } from './config.js';
 export class Renderer {
     constructor(svgElement) {
         this.svg = svgElement;
-        this.svg.innerHTML = ''; // Clear previous content
+        this.svg.innerHTML = '';
 
         const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
         defs.innerHTML = `
@@ -27,16 +27,21 @@ export class Renderer {
 
         this.svg.appendChild(defs);
         this.svg.appendChild(this.worldGroup);
+
+        this.animationLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.animationLayer.id = 'animation-layer';
+        this.worldGroup.appendChild(this.animationLayer);
     }
 
-    render(state) {
+    render(state, particles = []) {
         this.worldGroup.setAttribute('transform', `translate(${state.transform.x}, ${state.transform.y}) scale(${state.transform.k})`);
         this.renderConnections(state.connections, state.nodes);
         this.renderNodes(state.nodes);
+        this.renderParticles(particles, state);
     }
 
     renderNodes(nodes) {
-        this.nodesLayer.innerHTML = ''; // Clear previous nodes
+        this.nodesLayer.innerHTML = '';
         nodes.forEach(node => {
             const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
             group.setAttribute('id', node.id);
@@ -62,18 +67,59 @@ export class Renderer {
 
             group.appendChild(rect);
             group.appendChild(text);
+
+            const anchorPositions = [
+                { x: config.node.width / 2, y: 0 },
+                { x: config.node.width, y: config.node.height / 2 },
+                { x: config.node.width / 2, y: config.node.height },
+                { x: 0, y: config.node.height / 2 }
+            ];
+    
+            anchorPositions.forEach(pos => {
+                const anchor = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                anchor.setAttribute('class', 'anchor-point');
+                anchor.setAttribute('cx', pos.x);
+                anchor.setAttribute('cy', pos.y);
+                anchor.setAttribute('r', 5);
+                group.appendChild(anchor);
+            });
+
             this.nodesLayer.appendChild(group);
         });
     }
 
     renderConnections(connections, nodes) {
-        this.connectionsLayer.innerHTML = ''; // Clear previous connections
+        this.connectionsLayer.innerHTML = '';
         const nodeMap = new Map(nodes.map(n => [n.id, n]));
-
         connections.forEach(conn => {
             const sourceNode = nodeMap.get(conn.source);
             const targetNode = nodeMap.get(conn.target);
+            if (!sourceNode || !targetNode) return;
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', sourceNode.position.x + config.node.width / 2);
+            line.setAttribute('y1', sourceNode.position.y + config.node.height / 2);
+            line.setAttribute('x2', targetNode.position.x + config.node.width / 2);
+            line.setAttribute('y2', targetNode.position.y + config.node.height / 2);
+            line.setAttribute('stroke', 'var(--connection-color)');
+            line.setAttribute('stroke-width', config.connection.width);
+            line.setAttribute('marker-end', 'url(#arrowhead)');
+            this.connectionsLayer.appendChild(line);
+        });
+    }
 
+    renderParticles(particles, state) {
+        this.animationLayer.innerHTML = '';
+        if (!particles || particles.length === 0) return;
+
+        const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
+        const connectionMap = new Map(state.connections.map(c => [c.id, c]));
+
+        particles.forEach(p => {
+            const conn = connectionMap.get(p.connectionId);
+            if (!conn) return;
+
+            const sourceNode = nodeMap.get(conn.source);
+            const targetNode = nodeMap.get(conn.target);
             if (!sourceNode || !targetNode) return;
 
             const x1 = sourceNode.position.x + config.node.width / 2;
@@ -81,16 +127,15 @@ export class Renderer {
             const x2 = targetNode.position.x + config.node.width / 2;
             const y2 = targetNode.position.y + config.node.height / 2;
 
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', x1);
-            line.setAttribute('y1', y1);
-            line.setAttribute('x2', x2);
-            line.setAttribute('y2', y2);
-            line.setAttribute('stroke', 'var(--connection-color)');
-            line.setAttribute('stroke-width', config.connection.width);
-            line.setAttribute('marker-end', 'url(#arrowhead)');
+            const particleX = x1 + (x2 - x1) * p.progress;
+            const particleY = y1 + (y2 - y1) * p.progress;
 
-            this.connectionsLayer.appendChild(line);
+            const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            particle.setAttribute('cx', particleX);
+            particle.setAttribute('cy', particleY);
+            particle.setAttribute('r', 4);
+            particle.setAttribute('fill', 'var(--accent-color)');
+            this.animationLayer.appendChild(particle);
         });
     }
-} 
+}

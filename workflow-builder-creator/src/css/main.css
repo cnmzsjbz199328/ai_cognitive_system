@@ -21,15 +21,13 @@ body, html {
 }
 
 #app-container {
-    display: flex;
-    flex-direction: column;
     width: 100%;
     height: 100%;
 }
 
 #canvas-container {
-    flex-grow: 1;
-    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 #main-svg {
@@ -42,7 +40,7 @@ body, html {
 #ui-container {
     position: absolute;
     top: 10px;
-    left: 10px;
+    right: 10px;
     z-index: 100;
     display: flex;
     gap: 10px;
@@ -64,5 +62,41 @@ button {
 
 button:hover {
     background-color: #5a5a62;
+    border-color: var(--accent-color);
+}
+
+/* --- Anchor Point Styles --- */
+.node-group .anchor-point {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    fill: #f0f0f0;
+    stroke: #999;
+    stroke-width: 1;
+    cursor: crosshair;
+}
+
+.node-group:hover .anchor-point {
+    opacity: 1;
+}
+
+.anchor-point:hover {
+    fill: #007bff;
+    stroke: #0056b3;
+}
+
+/* --- UI Controls --- */
+#animation-controls button {
+    background-color: var(--node-bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--node-border-color);
+    padding: 8px 12px;
+    margin-left: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+#animation-controls button:hover {
+    background-color: var(--node-border-color);
     border-color: var(--accent-color);
 } 
