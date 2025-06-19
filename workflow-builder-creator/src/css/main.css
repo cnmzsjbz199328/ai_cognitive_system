@@ -1,0 +1,68 @@
+:root {
+    --bg-color: #1a1a1a;
+    --canvas-bg-color: #2a2a2e;
+    --node-bg-color: #4a4a52;
+    --node-border-color: #8c8c9a;
+    --text-color: #f0f0f0;
+    --accent-color: #00aaff;
+    --connection-color: #888;
+    --connection-highlight-color: var(--accent-color);
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+#app-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+#canvas-container {
+    flex-grow: 1;
+    position: relative;
+}
+
+#main-svg {
+    width: 100%;
+    height: 100%;
+    background-color: var(--canvas-bg-color);
+    display: block;
+}
+
+#ui-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 100;
+    display: flex;
+    gap: 10px;
+    background-color: rgba(42, 42, 46, 0.8);
+    padding: 8px;
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+}
+
+button {
+    background-color: var(--node-bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--node-border-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+button:hover {
+    background-color: #5a5a62;
+    border-color: var(--accent-color);
+} 
