@@ -30,12 +30,16 @@ class App {
         
         // Add Node Button
         document.getElementById('add-node-btn').addEventListener('click', () => {
-            // Calculate a position for the new node in SVG world coordinates
-            const svgRect = this.svg.getBoundingClientRect();
-            const centerX = (svgRect.width / 2 - state.transform.x) / state.transform.k;
-            const centerY = (svgRect.height / 2 - state.transform.y) / state.transform.k;
+            const nodeLabel = prompt("Enter a name for the new node:"); // Prompt for node name
 
-            addNode(centerX - config.node.width / 2, centerY - config.node.height / 2, 'New Node');
+            if (nodeLabel !== null && nodeLabel.trim() !== '') { // If user enters a name and doesn't cancel
+                // Calculate a position for the new node in SVG world coordinates
+                const svgRect = this.svg.getBoundingClientRect();
+                const centerX = (svgRect.width / 2 - state.transform.x) / state.transform.k;
+                const centerY = (svgRect.height / 2 - state.transform.y) / state.transform.k;
+
+                addNode(centerX - config.node.width / 2, centerY - config.node.height / 2, nodeLabel.trim()); // Pass the custom label
+            }
         });
     }
 

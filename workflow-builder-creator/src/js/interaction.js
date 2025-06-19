@@ -1,7 +1,8 @@
 import { config } from './config.js';
+import { getConnectionPath } from './utils.js';
 
 export class InteractionManager {
-    constructor(state, renderer) {
+    constructor(state, renderer, nodeEditorContainer) {
         this.state = state;
         this.renderer = renderer;
         this.isDraggingNode = false;
@@ -26,21 +27,30 @@ export class InteractionManager {
     }
 
     onMouseDown(e) {
+        if (this.isEditingNode) {
+            this.finishEditing();
+            return;
+        }
+
         if (e.target.classList.contains('anchor-point')) {
             e.stopPropagation();
             this.isConnecting = true;
             this.connectionStartNodeId = e.target.closest('.node-group').id;
             
-            const startPoint = this.getTransformedPoint(e);
-            
-            this.previewLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            this.previewLine.setAttribute('x1', startPoint.x);
-            this.previewLine.setAttribute('y1', startPoint.y);
-            this.previewLine.setAttribute('x2', startPoint.x);
-            this.previewLine.setAttribute('y2', startPoint.y);
+            const sourceNode = this.state.nodes.find(n => n.id === this.connectionStartNodeId);
+            if (!sourceNode) return;
+
+            this.previewLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             this.previewLine.setAttribute('stroke', 'var(--connection-color)');
             this.previewLine.setAttribute('stroke-width', config.connection.width);
+            this.previewLine.setAttribute('fill', 'none');
             this.previewLine.setAttribute('stroke-dasharray', '5,5');
+
+            const currentMousePoint = this.getTransformedPoint(e);
+            const dummyTargetNode = { position: { x: currentMousePoint.x - config.node.width / 2, y: currentMousePoint.y - config.node.height / 2 } };
+            const initialPathData = getConnectionPath(sourceNode, dummyTargetNode);
+            this.previewLine.setAttribute('d', initialPathData);
+
             this.renderer.worldGroup.appendChild(this.previewLine);
             return;
         }
@@ -67,9 +77,13 @@ export class InteractionManager {
 
     onMouseMove(e) {
         if (this.isConnecting) {
-            const point = this.getTransformedPoint(e);
-            this.previewLine.setAttribute('x2', point.x);
-            this.previewLine.setAttribute('y2', point.y);
+            const currentMousePoint = this.getTransformedPoint(e);
+            const sourceNode = this.state.nodes.find(n => n.id === this.connectionStartNodeId);
+            if (!sourceNode) return;
+
+            const dummyTargetNode = { position: { x: currentMousePoint.x - config.node.width / 2, y: currentMousePoint.y - config.node.height / 2 } };
+            const newPathData = getConnectionPath(sourceNode, dummyTargetNode);
+            this.previewLine.setAttribute('d', newPathData);
             return;
         }
 

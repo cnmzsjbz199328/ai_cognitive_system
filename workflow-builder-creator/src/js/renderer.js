@@ -1,4 +1,5 @@
 import { config } from './config.js';
+import { getConnectionPath } from './utils.js';
 
 export class Renderer {
     constructor(svgElement) {
@@ -100,7 +101,7 @@ export class Renderer {
             const targetNode = nodeMap.get(conn.target);
             if (!sourceNode || !targetNode) return;
             
-            const pathData = this.getConnectionPath(sourceNode, targetNode);
+            const pathData = getConnectionPath(sourceNode, targetNode);
 
             const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
             path.setAttribute('d', pathData);
@@ -110,25 +111,6 @@ export class Renderer {
             path.setAttribute('marker-end', 'url(#arrowhead)');
             this.connectionsLayer.appendChild(path);
         });
-    }
-
-    // Helper to calculate path data for a cubic Bézier curve
-    getConnectionPath(sourceNode, targetNode) {
-        const startX = sourceNode.position.x + config.node.width / 2;
-        const startY = sourceNode.position.y + config.node.height / 2;
-        const endX = targetNode.position.x + config.node.width / 2;
-        const endY = targetNode.position.y + config.node.height / 2;
-
-        // Control points for a smooth curve. Adjust these values for different curve shapes.
-        // Here, we create horizontal control points for a smooth S-curve or straight line.
-        const controlPointOffset = 100; // Adjust this value to change the curve intensity
-
-        const cp1x = startX + controlPointOffset;
-        const cp1y = startY;
-        const cp2x = endX - controlPointOffset;
-        const cp2y = endY;
-
-        return `M${startX},${startY} C${cp1x},${cp1y} ${cp2x},${cp2y} ${endX},${endY}`;
     }
 
     renderParticles(particles, state) {
@@ -141,7 +123,7 @@ export class Renderer {
             const conn = connectionMap.get(p.connectionId);
             if (!conn) return;
 
-            const pathElement = this.connectionsLayer.querySelector(`path[d="${this.getConnectionPath(state.nodes.find(n => n.id === conn.source), state.nodes.find(n => n.id === conn.target))}"]`);
+            const pathElement = this.connectionsLayer.querySelector(`path[d="${getConnectionPath(state.nodes.find(n => n.id === conn.source), state.nodes.find(n => n.id === conn.target))}"]`);
             if (!pathElement) return; // Path element not found, or not rendered yet
 
             const pathLength = pathElement.getTotalLength();
