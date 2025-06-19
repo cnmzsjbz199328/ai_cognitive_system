@@ -99,44 +99,57 @@ export class Renderer {
             const sourceNode = nodeMap.get(conn.source);
             const targetNode = nodeMap.get(conn.target);
             if (!sourceNode || !targetNode) return;
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', sourceNode.position.x + config.node.width / 2);
-            line.setAttribute('y1', sourceNode.position.y + config.node.height / 2);
-            line.setAttribute('x2', targetNode.position.x + config.node.width / 2);
-            line.setAttribute('y2', targetNode.position.y + config.node.height / 2);
-            line.setAttribute('stroke', 'var(--connection-color)');
-            line.setAttribute('stroke-width', config.connection.width);
-            line.setAttribute('marker-end', 'url(#arrowhead)');
-            this.connectionsLayer.appendChild(line);
+            
+            const pathData = this.getConnectionPath(sourceNode, targetNode);
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', pathData);
+            path.setAttribute('stroke', 'var(--connection-color)');
+            path.setAttribute('stroke-width', config.connection.width);
+            path.setAttribute('fill', 'none');
+            path.setAttribute('marker-end', 'url(#arrowhead)');
+            this.connectionsLayer.appendChild(path);
         });
+    }
+
+    // Helper to calculate path data for a cubic Bézier curve
+    getConnectionPath(sourceNode, targetNode) {
+        const startX = sourceNode.position.x + config.node.width / 2;
+        const startY = sourceNode.position.y + config.node.height / 2;
+        const endX = targetNode.position.x + config.node.width / 2;
+        const endY = targetNode.position.y + config.node.height / 2;
+
+        // Control points for a smooth curve. Adjust these values for different curve shapes.
+        // Here, we create horizontal control points for a smooth S-curve or straight line.
+        const controlPointOffset = 100; // Adjust this value to change the curve intensity
+
+        const cp1x = startX + controlPointOffset;
+        const cp1y = startY;
+        const cp2x = endX - controlPointOffset;
+        const cp2y = endY;
+
+        return `M${startX},${startY} C${cp1x},${cp1y} ${cp2x},${cp2y} ${endX},${endY}`;
     }
 
     renderParticles(particles, state) {
         this.animationLayer.innerHTML = '';
         if (!particles || particles.length === 0) return;
 
-        const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
         const connectionMap = new Map(state.connections.map(c => [c.id, c]));
 
         particles.forEach(p => {
             const conn = connectionMap.get(p.connectionId);
             if (!conn) return;
 
-            const sourceNode = nodeMap.get(conn.source);
-            const targetNode = nodeMap.get(conn.target);
-            if (!sourceNode || !targetNode) return;
+            const pathElement = this.connectionsLayer.querySelector(`path[d="${this.getConnectionPath(state.nodes.find(n => n.id === conn.source), state.nodes.find(n => n.id === conn.target))}"]`);
+            if (!pathElement) return; // Path element not found, or not rendered yet
 
-            const x1 = sourceNode.position.x + config.node.width / 2;
-            const y1 = sourceNode.position.y + config.node.height / 2;
-            const x2 = targetNode.position.x + config.node.width / 2;
-            const y2 = targetNode.position.y + config.node.height / 2;
-
-            const particleX = x1 + (x2 - x1) * p.progress;
-            const particleY = y1 + (y2 - y1) * p.progress;
+            const pathLength = pathElement.getTotalLength();
+            const point = pathElement.getPointAtLength(p.progress * pathLength);
 
             const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            particle.setAttribute('cx', particleX);
-            particle.setAttribute('cy', particleY);
+            particle.setAttribute('cx', point.x);
+            particle.setAttribute('cy', point.y);
             particle.setAttribute('r', 4);
             particle.setAttribute('fill', 'var(--accent-color)');
             this.animationLayer.appendChild(particle);

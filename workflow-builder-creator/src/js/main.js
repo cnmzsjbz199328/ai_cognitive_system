@@ -1,14 +1,16 @@
-import { state } from './state.js';
+import { state, addNode } from './state.js';
 import { Renderer } from './renderer.js';
 import { InteractionManager } from './interaction.js';
 import { AnimationManager } from './animation.js';
+import { config } from './config.js';
 
 class App {
     constructor() {
         this.svg = document.getElementById('main-svg');
         this.canvasContainer = document.getElementById('canvas-container');
+        this.nodeEditorContainer = document.getElementById('node-editor-container');
         this.renderer = new Renderer(this.svg);
-        this.interactionManager = new InteractionManager(state, this.renderer);
+        this.interactionManager = new InteractionManager(state, this.renderer, this.nodeEditorContainer);
         this.animationManager = new AnimationManager(state);
         this.lastFrameTime = 0;
     }
@@ -25,6 +27,16 @@ class App {
         document.getElementById('play-btn').addEventListener('click', () => this.animationManager.play());
         document.getElementById('pause-btn').addEventListener('click', () => this.animationManager.pause());
         document.getElementById('reset-btn').addEventListener('click', () => this.animationManager.reset());
+        
+        // Add Node Button
+        document.getElementById('add-node-btn').addEventListener('click', () => {
+            // Calculate a position for the new node in SVG world coordinates
+            const svgRect = this.svg.getBoundingClientRect();
+            const centerX = (svgRect.width / 2 - state.transform.x) / state.transform.k;
+            const centerY = (svgRect.height / 2 - state.transform.y) / state.transform.k;
+
+            addNode(centerX - config.node.width / 2, centerY - config.node.height / 2, 'New Node');
+        });
     }
 
     setupResizeObserver() {

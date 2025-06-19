@@ -101,6 +101,11 @@ button:hover {
     border-color: var(--accent-color);
 }
 
+/* Ensure consistent spacing for all buttons in animation-controls */
+#animation-controls button:not(:first-child) {
+    margin-left: 10px;
+}
+
 .node-group.selected > rect {
     stroke: var(--accent-color);
     filter: drop-shadow(0 0 5px var(--accent-color));
