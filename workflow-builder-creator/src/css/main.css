@@ -6,9 +6,21 @@
     --text-color: #f0f0f0;
     --accent-color: #00aaff;
     --connection-color: #888;
+    --grid-color: rgba(255, 255, 255, 0.1); /* White grid for dark theme */
     --connection-highlight-color: var(--accent-color);
     --selection-color: rgba(0, 170, 255, 0.3);
     --multi-selection-color: rgba(255, 193, 7, 0.3);
+}
+
+/* Light Theme */
+html.light-theme {
+    --bg-color: #f0f2f5;
+    --canvas-bg-color: #611e1e00;
+    --node-bg-color: #e9ecef;
+    --node-border-color: #ced4da;
+    --text-color: #343a40;
+    --connection-color: #adb5bd;
+    --grid-color: rgba(0, 0, 0, 0.08); /* Gray grid for light theme */
 }
 
 body, html {
@@ -50,6 +62,24 @@ body, html {
     padding: 8px;
     border-radius: 8px;
     backdrop-filter: blur(5px);
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+.light-theme #ui-container {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-left: 1px solid var(--node-border-color);
+    padding-left: 10px;
+}
+
+.control-group:first-child {
+    border-left: none;
+    padding-left: 0;
 }
 
 button {
@@ -167,4 +197,45 @@ button:hover {
 
 .anchor-point {
     will-change: opacity, transform;
+}
+
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+input[type="range"] {
+    cursor: pointer;
+}
+
+.grid-line {
+    stroke: var(--grid-color);
+    transition: stroke 0.3s ease; /* Smooth transition for grid color */
+    stroke-width: 3.5px;
+}
+
+/* --- Enhanced Anchor Point Styles --- */
+.node-group .anchor-point {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+    fill: var(--accent-color);
+    stroke: white;
+    stroke-width: 2px;
+    cursor: crosshair;
+    pointer-events: none; /* Block interaction when invisible */
+}
+
+.node-group.show-anchors .anchor-point,
+.node-group:hover .anchor-point {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: all; /* Allow interaction when visible */
+    filter: drop-shadow(0 0 3px var(--accent-color));
+}
+
+.anchor-point:hover {
+    transform: scale(1.3);
+    filter: drop-shadow(0 0 6px white);
 } 

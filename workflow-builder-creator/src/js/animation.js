@@ -3,7 +3,7 @@ export class AnimationManager {
         this.state = state;
         this.particles = [];
         this.isPlaying = false;
-        this.animationSpeed = 0.05; // Represents percentage of path per second
+        this.baseSpeed = 0.05; // Base speed: percentage of path per second
     }
 
     play() {
@@ -33,8 +33,10 @@ export class AnimationManager {
     update(deltaTime) {
         if (!this.isPlaying) return;
 
+        const effectiveSpeed = this.baseSpeed * this.state.animationSpeed;
+
         this.particles.forEach(p => {
-            p.progress += this.animationSpeed * (deltaTime / 1000);
+            p.progress += effectiveSpeed * (deltaTime / 1000);
             if (p.progress >= 1) {
                 p.progress = 0; // Loop the animation
             }

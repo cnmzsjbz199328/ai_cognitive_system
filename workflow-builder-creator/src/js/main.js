@@ -2,6 +2,7 @@ import { state, addNode } from './state.js';
 import { Renderer } from './renderer.js';
 import { InteractionManager } from './interactions/InteractionManager.js';
 import { AnimationManager } from './animation.js';
+import { DataHandler } from './DataHandler.js';
 import { config } from './config.js';
 
 class App {
@@ -12,11 +13,16 @@ class App {
         this.renderer = new Renderer(this.svg);
         this.interactionManager = new InteractionManager(state, this.renderer);
         this.animationManager = new AnimationManager(state);
+        this.dataHandler = new DataHandler();
         this.lastFrameTime = 0;
+        this.htmlEl = document.documentElement;
+        this.autosaveTimer = null;
     }
 
     async init() {
-        await this.loadData();
+        if (!this.dataHandler.loadFromLocalStorage()) {
+            await this.loadData();
+        }
         this.interactionManager.initialize();
         this.setupUIControls();
         this.setupResizeObserver();
@@ -24,23 +30,97 @@ class App {
     }
 
     setupUIControls() {
+        // Edit Controls
+        document.getElementById('add-node-btn').addEventListener('click', () => this.addNodeAtCenter());
+        document.getElementById('clear-btn').addEventListener('click', () => this.clearCanvas());
+
+        // File Controls
+        document.getElementById('save-json-btn').addEventListener('click', () => this.dataHandler.saveToFile());
+        document.getElementById('load-json-btn').addEventListener('click', () => document.getElementById('file-input').click());
+        document.getElementById('file-input').addEventListener('change', (e) => this.handleFileLoad(e));
+        document.getElementById('export-png-btn').addEventListener('click', () => this.dataHandler.exportToPNG(this.svg));
+
+        // Animation Controls
         document.getElementById('play-btn').addEventListener('click', () => this.animationManager.play());
         document.getElementById('pause-btn').addEventListener('click', () => this.animationManager.pause());
         document.getElementById('reset-btn').addEventListener('click', () => this.animationManager.reset());
-        
-        // Add Node Button
-        document.getElementById('add-node-btn').addEventListener('click', () => {
-            const nodeLabel = prompt("Enter a name for the new node:"); // Prompt for node name
+        document.getElementById('speed-slider').addEventListener('input', (e) => this.setAnimationSpeed(e.target.value));
 
-            if (nodeLabel !== null && nodeLabel.trim() !== '') { // If user enters a name and doesn't cancel
-                // Calculate a position for the new node in SVG world coordinates
-                const svgRect = this.svg.getBoundingClientRect();
-                const centerX = (svgRect.width / 2 - state.transform.x) / state.transform.k;
-                const centerY = (svgRect.height / 2 - state.transform.y) / state.transform.k;
+        // View Controls
+        document.getElementById('zoom-reset-btn').addEventListener('click', () => this.resetView());
+        document.getElementById('theme-btn').addEventListener('click', () => this.toggleTheme());
 
-                addNode(centerX - config.node.width / 2, centerY - config.node.height / 2, nodeLabel.trim()); // Pass the custom label
-            }
-        });
+        // Set initial UI state from state object
+        document.getElementById('speed-slider').value = state.animationSpeed;
+        this.htmlEl.classList.toggle('light-theme', state.theme === 'light');
+    }
+
+    addNodeAtCenter() {
+        const nodeLabel = prompt("Enter a name for the new node:");
+        if (nodeLabel !== null && nodeLabel.trim() !== '') {
+            const svgRect = this.svg.getBoundingClientRect();
+            const centerX = (svgRect.width / 2 - state.transform.x) / state.transform.k;
+            const centerY = (svgRect.height / 2 - state.transform.y) / state.transform.k;
+            addNode(centerX - config.node.width / 2, centerY - config.node.height / 2, nodeLabel.trim());
+            this.scheduleAutosave();
+        }
+    }
+
+    clearCanvas() {
+        if (confirm('Are you sure you want to clear the canvas? This action cannot be undone.')) {
+            state.nodes = [];
+            state.connections = [];
+            state.selectedNodeId = null;
+            state.selectedNodes.clear();
+            this.animationManager.reset();
+            this.scheduleAutosave();
+        }
+    }
+
+    async handleFileLoad(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            await this.dataHandler.loadFromFile(file);
+            this.animationManager.reset();
+            // Force a re-render and UI update
+            this.updateUIFromState();
+            console.log('File loaded successfully.');
+        } catch (error) {
+            alert(error.message);
+        }
+        // Reset file input so the same file can be loaded again
+        e.target.value = null;
+    }
+
+    setAnimationSpeed(speed) {
+        state.animationSpeed = parseFloat(speed);
+        this.scheduleAutosave();
+    }
+
+    resetView() {
+        state.transform.x = 0;
+        state.transform.y = 0;
+        state.transform.k = 1;
+    }
+
+    toggleTheme() {
+        state.theme = state.theme === 'light' ? 'dark' : 'light';
+        this.htmlEl.classList.toggle('light-theme', state.theme === 'light');
+        this.scheduleAutosave();
+    }
+
+    scheduleAutosave() {
+        clearTimeout(this.autosaveTimer);
+        this.autosaveTimer = setTimeout(() => {
+            this.dataHandler.saveToLocalStorage();
+        }, 1000); // Autosave after 1 second of inactivity
+    }
+    
+    updateUIFromState() {
+        this.htmlEl.classList.toggle('light-theme', state.theme === 'light');
+        document.getElementById('speed-slider').value = state.animationSpeed;
     }
 
     setupResizeObserver() {
@@ -65,6 +145,14 @@ class App {
             this.animationManager.update(deltaTime);
             this.renderer.render(state, this.animationManager.particles);
             
+            // A simple check to see if any user-driven state has changed
+            // This is a naive way to trigger autosave. A more robust solution might use a state management library.
+            const currentState = JSON.stringify({nodes: state.nodes, connections: state.connections, transform: state.transform});
+            if (this.lastSavedState !== currentState) {
+                this.lastSavedState = currentState;
+                this.scheduleAutosave();
+            }
+
             this.lastFrameTime = currentTime;
             requestAnimationFrame(loop);
         };
@@ -72,6 +160,7 @@ class App {
     }
 
     async loadData() {
+        // This is now only for the initial template data if local storage is empty
         try {
             const response = await fetch('src/data/flow.json');
             if (!response.ok) {
@@ -82,22 +171,9 @@ class App {
             state.connections = data.connections;
         } catch (error) {
             console.error("Failed to load flow data:", error);
-            // Fallback to sample data if loading fails
-            const data = {
-                "nodes": [
-                    { "id": "node_1", "label": "Input A", "position": { "x": 100, "y": 150 } },
-                    { "id": "node_2", "label": "Processing Core", "position": { "x": 400, "y": 250 } },
-                    { "id": "node_3", "label": "Output X", "position": { "x": 700, "y": 150 } },
-                    { "id": "node_4", "label": "Output Y", "position": { "x": 700, "y": 350 } }
-                ],
-                "connections": [
-                    { "id": "conn_1", "source": "node_1", "target": "node_2" },
-                    { "id": "conn_2", "source": "node_2", "target": "node_3" },
-                    { "id": "conn_3", "source": "node_2", "target": "node_4" }
-                ]
-            };
-            state.nodes = data.nodes;
-            state.connections = data.connections;
+            // Fallback to empty state if loading fails
+            state.nodes = [];
+            state.connections = [];
         }
     }
 }

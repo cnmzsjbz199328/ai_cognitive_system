@@ -15,7 +15,7 @@ export class Renderer {
             
             <!-- Grid pattern for visual alignment -->
             <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+                <path class="grid-line" d="M 20 0 L 0 0 0 20" fill="none" stroke-width="0.5"/>
             </pattern>
         `;
         
