@@ -49,6 +49,9 @@ export class Renderer {
         this.animationLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.animationLayer.id = 'animation-layer';
         this.worldGroup.appendChild(this.animationLayer);
+
+        // 关键备注：添加连接跟踪Map，用于高效管理连接元素
+        this.renderedConnections = new Map();
     }
 
     render(state, particles = []) {
@@ -138,23 +141,55 @@ export class Renderer {
     }
 
     renderConnections(connections, nodes) {
-        this.connectionsLayer.innerHTML = '';
         const nodeMap = new Map(nodes.map(n => [n.id, n]));
+        const currentConnectionIds = new Set();
+
         connections.forEach(conn => {
+            currentConnectionIds.add(conn.id);
             const sourceNode = nodeMap.get(conn.source);
             const targetNode = nodeMap.get(conn.target);
             if (!sourceNode || !targetNode) return;
-            
+
             const pathData = getConnectionPath(sourceNode, targetNode);
 
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('d', pathData);
-            path.setAttribute('stroke', 'var(--connection-color)');
-            path.setAttribute('stroke-width', config.connection.width);
-            path.setAttribute('fill', 'none');
-            path.setAttribute('marker-end', 'url(#arrowhead)');
-            this.connectionsLayer.appendChild(path);
+            if (this.renderedConnections.has(conn.id)) {
+                // 关键备注：更新现有连接，不触发动画
+                const path = this.renderedConnections.get(conn.id);
+                path.setAttribute('d', pathData);
+            } else {
+                // 关键备注：创建新连接并添加动画
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('id', conn.id);
+                path.setAttribute('d', pathData);
+                path.setAttribute('class', 'connection');
+                path.setAttribute('marker-end', 'url(#arrowhead)');
+                
+                this.connectionsLayer.appendChild(path);
+                
+                // 关键备注：计算路径长度并设置动画参数
+                const pathLength = path.getTotalLength();
+                path.style.strokeDasharray = pathLength;
+                path.style.strokeDashoffset = pathLength;
+                path.classList.add('connection-new');
+
+                // 关键备注：动画结束后清理样式，防止重复动画
+                setTimeout(() => {
+                    path.classList.remove('connection-new');
+                    path.style.strokeDasharray = '';
+                    path.style.strokeDashoffset = '';
+                }, 800); // 与CSS动画时长匹配
+
+                this.renderedConnections.set(conn.id, path);
+            }
         });
+
+        // 关键备注：移除已删除的连接
+        for (const [id, path] of this.renderedConnections.entries()) {
+            if (!currentConnectionIds.has(id)) {
+                this.connectionsLayer.removeChild(path);
+                this.renderedConnections.delete(id);
+            }
+        }
     }
 
     renderParticles(particles, state) {
@@ -167,8 +202,9 @@ export class Renderer {
             const conn = connectionMap.get(p.connectionId);
             if (!conn) return;
 
-            const pathElement = this.connectionsLayer.querySelector(`path[d="${getConnectionPath(state.nodes.find(n => n.id === conn.source), state.nodes.find(n => n.id === conn.target))}"]`);
-            if (!pathElement) return; // Path element not found, or not rendered yet
+            // 关键备注：使用缓存的路径元素提高性能
+            const pathElement = this.renderedConnections.get(conn.id);
+            if (!pathElement) return;
 
             const pathLength = pathElement.getTotalLength();
             const point = pathElement.getPointAtLength(p.progress * pathLength);
