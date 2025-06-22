@@ -1,6 +1,6 @@
 import { state, addNode } from './state.js';
 import { Renderer } from './renderer.js';
-import { InteractionManager } from './interaction.js';
+import { InteractionManager } from './interactions/InteractionManager.js';
 import { AnimationManager } from './animation.js';
 import { config } from './config.js';
 
@@ -10,7 +10,7 @@ class App {
         this.canvasContainer = document.getElementById('canvas-container');
         this.nodeEditorContainer = document.getElementById('node-editor-container');
         this.renderer = new Renderer(this.svg);
-        this.interactionManager = new InteractionManager(state, this.renderer, this.nodeEditorContainer);
+        this.interactionManager = new InteractionManager(state, this.renderer);
         this.animationManager = new AnimationManager(state);
         this.lastFrameTime = 0;
     }

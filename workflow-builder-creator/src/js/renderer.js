@@ -49,24 +49,27 @@ export class Renderer {
     render(state, particles = []) {
         this.worldGroup.setAttribute('transform', `translate(${state.transform.x}, ${state.transform.y}) scale(${state.transform.k})`);
         this.renderConnections(state.connections, state.nodes);
-        this.renderNodes(state.nodes, state.selectedNodeId, state.selectedNodes);
+        this.renderNodes(state);
         this.renderParticles(particles, state);
     }
 
-    renderNodes(nodes, selectedNodeId, selectedNodes = new Set()) {
+    renderNodes(state) {
         this.nodesLayer.innerHTML = '';
-        nodes.forEach(node => {
+        state.nodes.forEach(node => {
             const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
             group.setAttribute('id', node.id);
             group.setAttribute('class', 'node-group');
             group.setAttribute('transform', `translate(${node.position.x}, ${node.position.y})`);
             
-            // Enhanced selection styling
-            if (node.id === selectedNodeId) {
+            // Apply selection and proximity classes based on state
+            if (node.id === state.selectedNodeId) {
                 group.classList.add('selected');
             }
-            if (selectedNodes.has(node.id)) {
+            if (state.selectedNodes.has(node.id)) {
                 group.classList.add('multi-selected');
+            }
+            if (node.id === state.proximityNodeId) {
+                group.classList.add('show-anchors');
             }
 
             const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
