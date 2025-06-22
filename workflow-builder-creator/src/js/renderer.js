@@ -12,6 +12,11 @@ export class Renderer {
                 markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--connection-color)" />
             </marker>
+            
+            <!-- Grid pattern for visual alignment -->
+            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+            </pattern>
         `;
         
         this.connectionsLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -22,6 +27,13 @@ export class Renderer {
         
         this.worldGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.worldGroup.id = 'world-group';
+
+        // Add background grid
+        this.backgroundRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        this.backgroundRect.setAttribute('width', '100%');
+        this.backgroundRect.setAttribute('height', '100%');
+        this.backgroundRect.setAttribute('fill', 'url(#grid)');
+        this.worldGroup.appendChild(this.backgroundRect);
 
         this.worldGroup.appendChild(this.connectionsLayer);
         this.worldGroup.appendChild(this.nodesLayer);
@@ -37,11 +49,11 @@ export class Renderer {
     render(state, particles = []) {
         this.worldGroup.setAttribute('transform', `translate(${state.transform.x}, ${state.transform.y}) scale(${state.transform.k})`);
         this.renderConnections(state.connections, state.nodes);
-        this.renderNodes(state.nodes, state.selectedNodeId);
+        this.renderNodes(state.nodes, state.selectedNodeId, state.selectedNodes);
         this.renderParticles(particles, state);
     }
 
-    renderNodes(nodes, selectedNodeId) {
+    renderNodes(nodes, selectedNodeId, selectedNodes = new Set()) {
         this.nodesLayer.innerHTML = '';
         nodes.forEach(node => {
             const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
@@ -49,8 +61,12 @@ export class Renderer {
             group.setAttribute('class', 'node-group');
             group.setAttribute('transform', `translate(${node.position.x}, ${node.position.y})`);
             
+            // Enhanced selection styling
             if (node.id === selectedNodeId) {
                 group.classList.add('selected');
+            }
+            if (selectedNodes.has(node.id)) {
+                group.classList.add('multi-selected');
             }
 
             const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -73,6 +89,7 @@ export class Renderer {
             group.appendChild(rect);
             group.appendChild(text);
 
+            // Enhanced anchor points with better visibility
             const anchorPositions = [
                 { x: config.node.width / 2, y: 0 },
                 { x: config.node.width, y: config.node.height / 2 },

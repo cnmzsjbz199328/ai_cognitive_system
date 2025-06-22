@@ -7,6 +7,7 @@ export const state = {
         k: 1,
     },
     selectedNodeId: null,
+    selectedNodes: new Set(), // Phase 4: Multi-selection support
 };
 
 // Function to add a new node to the state
@@ -21,4 +22,36 @@ export function addNode(positionX, positionY, label = 'New Node') {
     };
     state.nodes.push(newNode);
     state.selectedNodeId = newNode.id;
+    state.selectedNodes.clear();
+    state.selectedNodes.add(newNode.id);
+}
+
+// Phase 4: Enhanced node management functions
+export function selectNode(nodeId) {
+    state.selectedNodeId = nodeId;
+    state.selectedNodes.add(nodeId);
+}
+
+export function deselectNode(nodeId) {
+    state.selectedNodes.delete(nodeId);
+    if (state.selectedNodeId === nodeId) {
+        state.selectedNodeId = state.selectedNodes.size > 0 
+            ? Array.from(state.selectedNodes)[0] 
+            : null;
+    }
+}
+
+export function clearSelection() {
+    state.selectedNodes.clear();
+    state.selectedNodeId = null;
+}
+
+export function selectAllNodes() {
+    state.selectedNodes.clear();
+    state.nodes.forEach(node => {
+        state.selectedNodes.add(node.id);
+    });
+    if (state.nodes.length > 0) {
+        state.selectedNodeId = state.nodes[state.nodes.length - 1].id;
+    }
 } 
