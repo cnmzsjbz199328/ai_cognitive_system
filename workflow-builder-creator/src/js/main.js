@@ -48,6 +48,7 @@ class App {
 
         // View Controls
         document.getElementById('zoom-reset-btn').addEventListener('click', () => this.resetView());
+        document.getElementById('fit-to-view-btn').addEventListener('click', () => this.fitToView()); // 添加这行
         document.getElementById('theme-btn').addEventListener('click', () => this.toggleTheme());
 
         // Set initial UI state from state object
@@ -103,6 +104,37 @@ class App {
         state.transform.x = 0;
         state.transform.y = 0;
         state.transform.k = 1;
+    }
+
+    fitToView() {
+        if (state.nodes.length === 0) {
+            this.resetView();
+            return;
+        }
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        state.nodes.forEach(node => {
+            minX = Math.min(minX, node.position.x);
+            minY = Math.min(minY, node.position.y);
+            maxX = Math.max(maxX, node.position.x + config.node.width);
+            maxY = Math.max(maxY, node.position.y + config.node.height);
+        });
+
+        const boundsWidth = maxX - minX;
+        const boundsHeight = maxY - minY;
+        const { width: viewportWidth, height: viewportHeight } = this.canvasContainer.getBoundingClientRect();
+
+        const padding = 50;
+        const scaleX = (viewportWidth - padding * 2) / boundsWidth;
+        const scaleY = (viewportHeight - padding * 2) / boundsHeight;
+        const scale = Math.min(scaleX, scaleY, 2);
+
+        const newX = (viewportWidth / 2) - ((minX + boundsWidth / 2) * scale);
+        const newY = (viewportHeight / 2) - ((minY + boundsHeight / 2) * scale);
+        
+        state.transform.k = scale;
+        state.transform.x = newX;
+        state.transform.y = newY;
     }
 
     toggleTheme() {

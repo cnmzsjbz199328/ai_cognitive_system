@@ -15,10 +15,19 @@ export class Renderer {
             
             <!-- Grid pattern for visual alignment -->
             <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <path class="grid-line" d="M 20 0 L 0 0 0 20" fill="none" stroke-width="0.5"/>
+                <path class="grid-line" d="M 0 0 L 20 0 M 0 0 L 0 20" fill="none" stroke-width="0.5"/>
             </pattern>
         `;
         
+        // Static background layer that does not move with the world
+        this.backgroundLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        this.backgroundLayer.id = 'background-layer';
+        this.backgroundRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        this.backgroundRect.setAttribute('width', '100%');
+        this.backgroundRect.setAttribute('height', '100%');
+        this.backgroundRect.setAttribute('fill', 'url(#grid)');
+        this.backgroundLayer.appendChild(this.backgroundRect);
+
         this.connectionsLayer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         this.connectionsLayer.id = 'connections-layer';
 
@@ -29,11 +38,7 @@ export class Renderer {
         this.worldGroup.id = 'world-group';
 
         // Add background grid
-        this.backgroundRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        this.backgroundRect.setAttribute('width', '100%');
-        this.backgroundRect.setAttribute('height', '100%');
-        this.backgroundRect.setAttribute('fill', 'url(#grid)');
-        this.worldGroup.appendChild(this.backgroundRect);
+        this.svg.appendChild(this.backgroundLayer); // Add static background first
 
         this.worldGroup.appendChild(this.connectionsLayer);
         this.worldGroup.appendChild(this.nodesLayer);
@@ -48,9 +53,28 @@ export class Renderer {
 
     render(state, particles = []) {
         this.worldGroup.setAttribute('transform', `translate(${state.transform.x}, ${state.transform.y}) scale(${state.transform.k})`);
+        this.updateGridPattern(state.transform);
         this.renderConnections(state.connections, state.nodes);
         this.renderNodes(state);
         this.renderParticles(particles, state);
+    }
+
+    updateGridPattern({ x, y, k }) {
+        const gridPattern = this.svg.getElementById('grid');
+        if (gridPattern) {
+            const baseSize = 20;
+            const scaledSize = baseSize * k;
+            gridPattern.setAttribute('x', x % scaledSize);
+            gridPattern.setAttribute('y', y % scaledSize);
+            gridPattern.setAttribute('width', scaledSize);
+            gridPattern.setAttribute('height', scaledSize);
+
+            const path = gridPattern.querySelector('.grid-line');
+            if (path) {
+                path.setAttribute('d', `M ${scaledSize} 0 L 0 0 0 ${scaledSize}`);
+                path.setAttribute('stroke-width', 0.5 * Math.max(1, k * 0.5)); // Keep line thin but visible
+            }
+        }
     }
 
     renderNodes(state) {
