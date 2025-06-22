@@ -98,22 +98,46 @@ export class DataHandler {
     
     // --- Image Export ---
 
-    exportToPNG(svgElement, fileName = 'workflow.png') {
-        const svgData = new XMLSerializer().serializeToString(svgElement);
+    async exportToPNG(svgElement, fileName = 'workflow.png') {
+        const svgClone = svgElement.cloneNode(true);
+
+        // Explicitly set background color on the clone from computed style
+        const svgStyle = getComputedStyle(svgElement);
+        svgClone.style.backgroundColor = svgStyle.backgroundColor;
+
+        const styleEl = document.createElement('style');
+        let cssText = '';
+        for (const sheet of document.styleSheets) {
+            try {
+                for (const rule of sheet.cssRules) {
+                    cssText += rule.cssText;
+                }
+            } catch (e) {
+                console.warn("Cannot read cross-origin stylesheet. Styles may be missing in export.", e);
+            }
+        }
+        styleEl.textContent = cssText;
+        svgClone.insertBefore(styleEl, svgClone.firstChild);
+
+        const svgData = new XMLSerializer().serializeToString(svgClone);
         const canvas = document.createElement('canvas');
         const svgSize = svgElement.getBoundingClientRect();
         
-        canvas.width = svgSize.width;
-        canvas.height = svgSize.height;
+        // Use a higher resolution for better quality
+        const scaleFactor = 2; 
+        canvas.width = svgSize.width * scaleFactor;
+        canvas.height = svgSize.height * scaleFactor;
         
         const ctx = canvas.getContext('2d');
+        ctx.scale(scaleFactor, scaleFactor);
+
         const img = new Image();
 
         const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
         const url = URL.createObjectURL(svgBlob);
 
         img.onload = () => {
-            ctx.drawImage(img, 0, 0);
+            ctx.drawImage(img, 0, 0, svgSize.width, svgSize.height);
             URL.revokeObjectURL(url);
             
             const pngUrl = canvas.toDataURL('image/png');
