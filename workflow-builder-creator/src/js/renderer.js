@@ -57,7 +57,7 @@ export class Renderer {
     render(state, particles = []) {
         this.worldGroup.setAttribute('transform', `translate(${state.transform.x}, ${state.transform.y}) scale(${state.transform.k})`);
         this.updateGridPattern(state.transform);
-        this.renderConnections(state.connections, state.nodes);
+        this.renderConnections(state);
         this.renderNodes(state);
         this.renderParticles(particles, state);
     }
@@ -140,7 +140,8 @@ export class Renderer {
         });
     }
 
-    renderConnections(connections, nodes) {
+    renderConnections(state) {
+        const { connections, nodes } = state;
         const nodeMap = new Map(nodes.map(n => [n.id, n]));
         const currentConnectionIds = new Set();
 
@@ -156,6 +157,7 @@ export class Renderer {
                 // 关键备注：更新现有连接，不触发动画
                 const path = this.renderedConnections.get(conn.id);
                 path.setAttribute('d', pathData);
+                this.updateConnectionAnimation(path, state.animationMode);
             } else {
                 // 关键备注：创建新连接并添加动画
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -166,6 +168,9 @@ export class Renderer {
                 
                 this.connectionsLayer.appendChild(path);
                 
+                // Set animation class before triggering draw animation
+                this.updateConnectionAnimation(path, state.animationMode);
+
                 // 关键备注：计算路径长度并设置动画参数
                 const pathLength = path.getTotalLength();
                 path.style.strokeDasharray = pathLength;
@@ -192,17 +197,24 @@ export class Renderer {
         }
     }
 
+    updateConnectionAnimation(pathElement, mode) {
+        // No-op for now, can be used for future CSS-based mode changes.
+    }
+
     renderParticles(particles, state) {
         this.animationLayer.innerHTML = '';
         if (!particles || particles.length === 0) return;
 
         const connectionMap = new Map(state.connections.map(c => [c.id, c]));
+        const nodeMap = new Map(state.nodes.map(n => [n.id, n]));
 
         particles.forEach(p => {
+            // 关键备注：只渲染在可视范围内的粒子，提高性能。
+            if (p.progress < 0 || p.progress > 1) return;
+
             const conn = connectionMap.get(p.connectionId);
             if (!conn) return;
 
-            // 关键备注：使用缓存的路径元素提高性能
             const pathElement = this.renderedConnections.get(conn.id);
             if (!pathElement) return;
 
@@ -210,11 +222,92 @@ export class Renderer {
             const point = pathElement.getPointAtLength(p.progress * pathLength);
 
             const particle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            
+            // 关键备注：根据当前的动画模式选择不同的渲染逻辑。
+            switch (state.animationMode) {
+                case 'classic':
+                    particle.setAttribute('r', p.isHead ? 6 : 3);
+                    particle.setAttribute('fill', 'var(--accent-color)');
+                    particle.setAttribute('filter', 'drop-shadow(0 0 4px var(--accent-color))');
+                    particle.style.opacity = p.isHead ? 1 : 0.6;
+                    break;
+                
+                case 'minimal':
+                default:
+                    particle.setAttribute('r', p.isHead ? 3 : 1.5);
+                    particle.setAttribute('fill', 'var(--text-color)');
+                    break;
+            }
+            
             particle.setAttribute('cx', point.x);
             particle.setAttribute('cy', point.y);
-            particle.setAttribute('r', 4);
-            particle.setAttribute('fill', 'var(--accent-color)');
             this.animationLayer.appendChild(particle);
+
+            // 经典模式下的节点脉冲效果
+            if (state.animationMode === 'classic' && p.isHead) {
+                const sourceNode = nodeMap.get(conn.source);
+                if (sourceNode) {
+                    // 关键备注：创建矩形脉冲以匹配节点形状。
+                    const pulseRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    const expansion = 20;
+                    
+                    // 初始状态与节点相同
+                    pulseRect.setAttribute('x', sourceNode.position.x);
+                    pulseRect.setAttribute('y', sourceNode.position.y);
+                    pulseRect.setAttribute('width', config.node.width);
+                    pulseRect.setAttribute('height', config.node.height);
+                    pulseRect.setAttribute('rx', 8); // 保持圆角
+                    pulseRect.setAttribute('fill', 'none');
+                    pulseRect.setAttribute('stroke', 'var(--accent-color)');
+                    pulseRect.setAttribute('stroke-width', '2');
+
+                    // 动画定义
+                    const dur = '0.7s';
+                    const animateX = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+                    animateX.setAttribute('attributeName', 'x');
+                    animateX.setAttribute('from', sourceNode.position.x);
+                    animateX.setAttribute('to', sourceNode.position.x - expansion);
+                    animateX.setAttribute('dur', dur);
+
+                    const animateY = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+                    animateY.setAttribute('attributeName', 'y');
+                    animateY.setAttribute('from', sourceNode.position.y);
+                    animateY.setAttribute('to', sourceNode.position.y - expansion);
+                    animateY.setAttribute('dur', dur);
+
+                    const animateW = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+                    animateW.setAttribute('attributeName', 'width');
+                    animateW.setAttribute('from', config.node.width);
+                    animateW.setAttribute('to', config.node.width + expansion * 2);
+                    animateW.setAttribute('dur', dur);
+
+                    const animateH = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+                    animateH.setAttribute('attributeName', 'height');
+                    animateH.setAttribute('from', config.node.height);
+                    animateH.setAttribute('to', config.node.height + expansion * 2);
+                    animateH.setAttribute('dur', dur);
+
+                    const animateOpacity = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+                    animateOpacity.setAttribute('attributeName', 'opacity');
+                    animateOpacity.setAttribute('from', '1');
+                    animateOpacity.setAttribute('to', '0');
+                    animateOpacity.setAttribute('dur', dur);
+
+                    pulseRect.appendChild(animateX);
+                    pulseRect.appendChild(animateY);
+                    pulseRect.appendChild(animateW);
+                    pulseRect.appendChild(animateH);
+                    pulseRect.appendChild(animateOpacity);
+                    this.animationLayer.appendChild(pulseRect);
+
+                    // 动画结束后移除元素
+                    setTimeout(() => {
+                        if (pulseRect.parentNode) {
+                            this.animationLayer.removeChild(pulseRect)
+                        }
+                    }, 700);
+                 }
+            }
         });
     }
 }

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据传输特效样式选择</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            overflow: hidden;
+        }
+        
+        canvas {
+            display: block;
+            cursor: pointer;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            color: white;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(100, 255, 218, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            min-width: 600px;
+            text-align: center;
+        }
+        
+        .style-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .style-button {
+            padding: 12px 18px;
+            background: rgba(100, 255, 218, 0.2);
+            border: 2px solid #64ffda;
+            color: #64ffda;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 5px rgba(100, 255, 218, 0.5);
+            min-width: 80px;
+        }
+        
+        .style-button:hover {
+            background: rgba(100, 255, 218, 0.4);
+            box-shadow: 0 0 20px rgba(100, 255, 218, 0.6);
+            transform: translateY(-2px);
+        }
+        
+        .style-button.active {
+            background: #64ffda;
+            color: #000;
+            box-shadow: 0 0 25px rgba(100, 255, 218, 0.8);
+            transform: scale(1.05);
+        }
+        
+        .info {
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            font-weight: bold;
+        }
+        
+        .status {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: white;
+            font-size: 14px;
+            text-align: right;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            backdrop-filter: blur(10px);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <div class="info">选择传输特效样式 (点击画布改变方向)</div>
+        <div class="style-selector">
+            <button class="style-button active" data-style="minimal">极简</button>
+            <button class="style-button" data-style="classic">经典</button>
+            <button class="style-button" data-style="neon">霓虹</button>
+            <button class="style-button" data-style="matrix">矩阵</button>
+            <button class="style-button" data-style="cyberpunk">赛博朋克</button>
+            <button class="style-button" data-style="holographic">全息</button>
+            <button class="style-button" data-style="quantum">量子</button>
+            <button class="style-button" data-style="neural">神经网络</button>
+        </div>
+    </div>
+    
+    <div class="status">
+        <div id="styleName">当前样式: 极简</div>
+        <div id="dataRate">传输速率: 1.2 GB/s</div>
+        <div id="packets">数据包: 0</div>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 样式配置
+        const styles = {
+            minimal: {
+                name: '极简',
+                background: '#f5f5f5',
+                nodeColor: '#333',
+                nodeSize: 20,
+                lineColor: '#666',
+                particleColor: '#007acc',
+                particleSize: 2,
+                particleSpeed: 0.02,
+                effects: false,
+                pulseEffect: false
+            },
+            classic: {
+                name: '经典',
+                background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                nodeColor: '#4a90e2',
+                nodeSize: 25,
+                lineColor: '#4a90e2',
+                particleColor: '#87ceeb',
+                particleSize: 3,
+                particleSpeed: 0.015,
+                effects: true,
+                pulseEffect: true
+            },
+            neon: {
+                name: '霓虹',
+                background: '#000',
+                nodeColor: '#ff0080',
+                nodeSize: 30,
+                lineColor: '#00ff80',
+                particleColor: '#ff0080',
+                particleSize: 4,
+                particleSpeed: 0.025,
+                effects: true,
+                pulseEffect: true,
+                glow: true
+            },
+            matrix: {
+                name: '矩阵',
+                background: '#000',
+                nodeColor: '#00ff00',
+                nodeSize: 25,
+                lineColor: '#008000',
+                particleColor: '#00ff00',
+                particleSize: 2,
+                particleSpeed: 0.03,
+                effects: true,
+                digitalRain: true
+            },
+            cyberpunk: {
+                name: '赛博朋克',
+                background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)',
+                nodeColor: '#64ffda',
+                nodeSize: 35,
+                lineColor: '#ff6b6b',
+                particleColor: '#64ffda',
+                particleSize: 5,
+                particleSpeed: 0.02,
+                effects: true,
+                pulseEffect: true,
+                glow: true,
+                hexagon: true
+            },
+            holographic: {
+                name: '全息',
+                background: 'linear-gradient(45deg, #000033 0%, #000066 50%, #000099 100%)',
+                nodeColor: '#00ffff',
+                nodeSize: 30,
+                lineColor: '#ffffff',
+                particleColor: '#00ffff',
+                particleSize: 4,
+                particleSpeed: 0.018,
+                effects: true,
+                hologram: true,
+                rainbow: true
+            },
+            quantum: {
+                name: '量子',
+                background: 'radial-gradient(circle, #000000 0%, #1a0033 50%, #330066 100%)',
+                nodeColor: '#9966ff',
+                nodeSize: 28,
+                lineColor: '#6600cc',
+                particleColor: '#9966ff',
+                particleSize: 3,
+                particleSpeed: 0.01,
+                effects: true,
+                quantum: true,
+                waveform: true
+            },
+            neural: {
+                name: '神经网络',
+                background: 'linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)',
+                nodeColor: '#ffd700',
+                nodeSize: 32,
+                lineColor: '#ff4500',
+                particleColor: '#ffd700',
+                particleSize: 4,
+                particleSpeed: 0.022,
+                effects: true,
+                neural: true,
+                synapses: true
+            }
+        };
+        
+        let currentStyle = 'minimal';
+        let transferDirection = 1;
+        let particles = [];
+        let pulses = [];
+        let packetCount = 0;
+        let backgroundParticles = [];
+        
+        // 节点类
+        class Node {
+            constructor(x, y, label) {
+                this.x = x;
+                this.y = y;
+                this.label = label;
+                this.pulseRadius = 0;
+                this.pulseOpacity = 0;
+                this.glowIntensity = 0;
+                this.time = 0;
+            }
+            
+            update() {
+                this.time += 0.02;
+                const style = styles[currentStyle];
+                
+                if (style.pulseEffect) {
+                    this.pulseRadius += 2;
+                    this.pulseOpacity = Math.max(0, 1 - this.pulseRadius / 60);
+                    if (this.pulseRadius > 60) this.pulseRadius = 0;
+                }
+                
+                this.glowIntensity = 0.5 + 0.3 * Math.sin(this.time);
+            }
+            
+            draw() {
+                const style = styles[currentStyle];
+                
+                // 背景发光
+                if (style.effects && style.glow) {
+                    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, style.nodeSize * 3);
+                    gradient.addColorStop(0, style.nodeColor + '40');
+                    gradient.addColorStop(1, 'transparent');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, style.nodeSize * 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // 脉冲环
+                if (style.pulseEffect && this.pulseOpacity > 0) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, style.nodeSize + this.pulseRadius, 0, Math.PI * 2);
+                    ctx.strokeStyle = style.nodeColor + Math.floor(this.pulseOpacity * 255).toString(16).padStart(2, '0');
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+                
+                // 主节点
+                if (style.hexagon) {
+                    this.drawHexagon();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, style.nodeSize, 0, Math.PI * 2);
+                    ctx.fillStyle = style.nodeColor;
+                    ctx.fill();
+                    
+                    if (style.effects) {
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 2;
+                        ctx.stroke();
+                    }
+                }
+                
+                // 全息效果
+                if (style.hologram) {
+                    for (let i = 0; i < 3; i++) {
+                        ctx.beginPath();
+                        ctx.arc(this.x, this.y, style.nodeSize - i * 5, 0, Math.PI * 2);
+                        ctx.strokeStyle = style.nodeColor + (100 - i * 30).toString(16);
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+                
+                // 标签
+                ctx.fillStyle = currentStyle === 'minimal' ? '#333' : '#ffffff';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.label, this.x, this.y + style.nodeSize + 20);
+            }
+            
+            drawHexagon() {
+                const style = styles[currentStyle];
+                const sides = 6;
+                const angle = (Math.PI * 2) / sides;
+                
+                ctx.beginPath();
+                for (let i = 0; i < sides; i++) {
+                    const x = this.x + Math.cos(angle * i + this.time) * style.nodeSize;
+                    const y = this.y + Math.sin(angle * i + this.time) * style.nodeSize;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fillStyle = style.nodeColor;
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+        
+        // 粒子类
+        class Particle {
+            constructor(startX, startY, endX, endY) {
+                this.startX = startX;
+                this.startY = startY;
+                this.endX = endX;
+                this.endY = endY;
+                this.progress = 0;
+                this.speed = styles[currentStyle].particleSpeed + Math.random() * 0.01;
+                this.size = styles[currentStyle].particleSize + Math.random() * 2;
+                this.opacity = 1;
+                this.trail = [];
+                this.maxTrailLength = styles[currentStyle].effects ? 8 : 3;
+                this.hue = Math.random() * 360;
+                this.x = startX;
+                this.y = startY;
+            }
+            
+            update() {
+                const style = styles[currentStyle];
+                
+                this.trail.push({x: this.x, y: this.y, opacity: this.opacity});
+                if (this.trail.length > this.maxTrailLength) {
+                    this.trail.shift();
+                }
+                
+                this.progress += this.speed;
+                
+                if (style.waveform) {
+                    // 波形路径
+                    const t = this.progress;
+                    this.x = this.startX + (this.endX - this.startX) * t;
+                    this.y = this.startY + (this.endY - this.startY) * t + Math.sin(t * Math.PI * 4) * 20;
+                } else {
+                    // 直线或曲线路径
+                    const t = this.progress;
+                    const controlX = (this.startX + this.endX) / 2;
+                    const controlY = (this.startY + this.endY) / 2 - (style.effects ? 50 : 0);
+                    
+                    if (style.effects) {
+                        this.x = Math.pow(1-t, 2) * this.startX + 2*(1-t)*t * controlX + Math.pow(t, 2) * this.endX;
+                        this.y = Math.pow(1-t, 2) * this.startY + 2*(1-t)*t * controlY + Math.pow(t, 2) * this.endY;
+                    } else {
+                        this.x = this.startX + (this.endX - this.startX) * t;
+                        this.y = this.startY + (this.endY - this.startY) * t;
+                    }
+                }
+                
+                if (this.progress > 0.8) {
+                    this.opacity = (1 - this.progress) * 5;
+                }
+                
+                return this.progress < 1;
+            }
+            
+            draw() {
+                const style = styles[currentStyle];
+                
+                // 绘制拖尾
+                if (style.effects) {
+                    for (let i = 0; i < this.trail.length; i++) {
+                        const point = this.trail[i];
+                        const trailOpacity = (i / this.trail.length) * point.opacity * 0.5;
+                        const trailSize = this.size * (i / this.trail.length) * 0.5;
+                        
+                        ctx.beginPath();
+                        ctx.arc(point.x, point.y, trailSize, 0, Math.PI * 2);
+                        
+                        if (style.rainbow) {
+                            ctx.fillStyle = `hsla(${this.hue + i * 30}, 100%, 70%, ${trailOpacity})`;
+                        } else {
+                            ctx.fillStyle = style.particleColor + Math.floor(trailOpacity * 255).toString(16).padStart(2, '0');
+                        }
+                        ctx.fill();
+                    }
+                }
+                
+                // 绘制主粒子
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                
+                if (style.glow || style.effects) {
+                    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+                    gradient.addColorStop(0, style.particleColor);
+                    gradient.addColorStop(1, style.particleColor + '00');
+                    ctx.fillStyle = gradient;
+                } else {
+                    ctx.fillStyle = style.particleColor;
+                }
+                
+                ctx.fill();
+                
+                // 量子效果
+                if (style.quantum) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
+                    ctx.strokeStyle = style.particleColor + '30';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+        }
+        
+        // 初始化节点
+        const nodes = [
+            new Node(canvas.width * 0.2, canvas.height * 0.5, '源节点'),
+            new Node(canvas.width * 0.8, canvas.height * 0.5, '目标节点')
+        ];
+        
+        function setBackground() {
+            const style = styles[currentStyle];
+            if (style.background.includes('gradient')) {
+                const gradient = style.background.includes('linear') ? 
+                    ctx.createLinearGradient(0, 0, canvas.width, canvas.height) :
+                    ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, Math.max(canvas.width, canvas.height));
+                
+                // 解析渐变色
+                const colors = style.background.match(/#[a-fA-F0-9]{6}/g) || ['#000000', '#333333'];
+                colors.forEach((color, i) => {
+                    gradient.addColorStop(i / (colors.length - 1), color);
+                });
+                
+                ctx.fillStyle = gradient;
+            } else {
+                ctx.fillStyle = style.background;
+            }
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        function drawConnection() {
+            const style = styles[currentStyle];
+            const node1 = nodes[0];
+            const node2 = nodes[1];
+            
+            ctx.beginPath();
+            ctx.moveTo(node1.x + style.nodeSize, node1.y);
+            ctx.lineTo(node2.x - style.nodeSize, node2.y);
+            ctx.strokeStyle = style.lineColor;
+            ctx.lineWidth = style.effects ? 2 : 1;
+            ctx.stroke();
+            
+            // 方向箭头
+            const arrowX = (node1.x + node2.x) / 2;
+            const arrowY = node1.y;
+            const arrowSize = 10;
+            
+            ctx.beginPath();
+            if (transferDirection === 1) {
+                ctx.moveTo(arrowX - arrowSize, arrowY - arrowSize);
+                ctx.lineTo(arrowX, arrowY);
+                ctx.lineTo(arrowX - arrowSize, arrowY + arrowSize);
+            } else {
+                ctx.moveTo(arrowX + arrowSize, arrowY - arrowSize);
+                ctx.lineTo(arrowX, arrowY);
+                ctx.lineTo(arrowX + arrowSize, arrowY + arrowSize);
+            }
+            ctx.strokeStyle = style.lineColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function generateParticles() {
+            const style = styles[currentStyle];
+            const spawnRate = style.effects ? 0.3 : 0.2;
+            
+            if (Math.random() < spawnRate) {
+                const sourceNode = transferDirection === 1 ? nodes[0] : nodes[1];
+                const targetNode = transferDirection === 1 ? nodes[1] : nodes[0];
+                
+                particles.push(new Particle(
+                    sourceNode.x + (transferDirection === 1 ? style.nodeSize : -style.nodeSize),
+                    sourceNode.y,
+                    targetNode.x + (transferDirection === 1 ? -style.nodeSize : style.nodeSize),
+                    targetNode.y
+                ));
+                
+                packetCount++;
+            }
+        }
+        
+        function animate() {
+            const style = styles[currentStyle];
+            
+            // 设置背景
+            if (currentStyle === 'minimal') {
+                ctx.fillStyle = style.background;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                setBackground();
+            }
+            
+            drawConnection();
+            
+            nodes.forEach(node => {
+                node.update();
+                node.draw();
+            });
+            
+            generateParticles();
+            
+            particles = particles.filter(particle => {
+                particle.draw();
+                return particle.update();
+            });
+            
+            // 更新状态
+            if (Math.random() < 0.02) {
+                const rate = (1.2 + Math.random() * 0.5).toFixed(1);
+                document.getElementById('dataRate').textContent = `传输速率: ${rate} GB/s`;
+                document.getElementById('packets').textContent = `数据包: ${packetCount}`;
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // 样式切换
+        document.querySelectorAll('.style-button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelector('.style-button.active').classList.remove('active');
+                button.classList.add('active');
+                currentStyle = button.dataset.style;
+                document.getElementById('styleName').textContent = `当前样式: ${styles[currentStyle].name}`;
+                
+                // 清空粒子重新开始
+                particles = [];
+                packetCount = 0;
+            });
+        });
+        
+        // 点击切换方向
+        canvas.addEventListener('click', () => {
+            transferDirection *= -1;
+        });
+        
+        animate();
+    </script>
+</body>
+</html>

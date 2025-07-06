@@ -5,6 +5,8 @@ import { AnimationManager } from './animation.js';
 import { DataHandler } from './DataHandler.js';
 import { config } from './config.js';
 
+const ANIMATION_MODES = ['minimal', 'classic'];
+
 class App {
     constructor() {
         this.svg = document.getElementById('main-svg');
@@ -45,10 +47,11 @@ class App {
         document.getElementById('pause-btn').addEventListener('click', () => this.animationManager.pause());
         document.getElementById('reset-btn').addEventListener('click', () => this.animationManager.reset());
         document.getElementById('speed-slider').addEventListener('input', (e) => this.setAnimationSpeed(e.target.value));
+        document.getElementById('mode-btn').addEventListener('click', () => this.switchAnimationMode());
 
         // View Controls
         document.getElementById('zoom-reset-btn').addEventListener('click', () => this.resetView());
-        document.getElementById('fit-to-view-btn').addEventListener('click', () => this.fitToView()); // 添加这行
+        document.getElementById('fit-to-view-btn').addEventListener('click', () => this.fitToView());
         document.getElementById('theme-btn').addEventListener('click', () => this.toggleTheme());
 
         // Set initial UI state from state object
@@ -135,6 +138,22 @@ class App {
         state.transform.k = scale;
         state.transform.x = newX;
         state.transform.y = newY;
+    }
+
+    switchAnimationMode() {
+        const currentIndex = ANIMATION_MODES.indexOf(state.animationMode);
+        const nextIndex = (currentIndex + 1) % ANIMATION_MODES.length;
+        state.animationMode = ANIMATION_MODES[nextIndex];
+        
+        const modeBtn = document.getElementById('mode-btn');
+        const newModeName = state.animationMode.charAt(0).toUpperCase() + state.animationMode.slice(1);
+        modeBtn.textContent = `${newModeName} Mode`;
+        modeBtn.title = `Switch to ${ANIMATION_MODES[(nextIndex + 1) % ANIMATION_MODES.length]} mode`;
+        
+        // When switching away from particle mode, reset to hide particles
+        if (state.animationMode !== 'particle' && state.animationMode !== 'minimal') {
+            this.animationManager.reset();
+        }
     }
 
     toggleTheme() {

@@ -11,6 +11,7 @@ export const state = {
     proximityNodeId: null,   // The node ID that the mouse is currently close to
     theme: 'dark',           // 'dark' or 'light'
     animationSpeed: 1,       // Multiplier for animation speed
+    animationMode: 'particle', // 'particle', 'pulse', or 'gradient'
 };
 
 // Function to add a new node to the state
