@@ -136,5 +136,10 @@ export class AnimationManager {
 
         // 关键备注：最后，合并幸存的粒子和新创建的粒子，作为下一帧的最终列表。
         this.particles = survivingParticles.concat(newlyCreatedParticles);
+
+        // 新增：如果动画正在播放且没有粒子，自动重启
+        if (this.isPlaying && this.particles.length === 0) {
+            this.initFromSourceNodes();
+        }
     }
 } 

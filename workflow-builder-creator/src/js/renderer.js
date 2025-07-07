@@ -82,6 +82,62 @@ export class Renderer {
 
     renderNodes(state) {
         this.nodesLayer.innerHTML = '';
+        // --- 辅助函数：按像素宽度自动换行 ---
+        function wrapTextByWidth(text, maxWidth, fontSize, fontFamily = 'sans-serif') {
+            const lines = [];
+            let currentLine = '';
+            let testLine = '';
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.font = `${fontSize}px ${fontFamily}`;
+            for (let i = 0; i < text.length; i++) {
+                testLine = currentLine + text[i];
+                if (ctx.measureText(testLine).width > maxWidth && currentLine !== '') {
+                    console.log(`[wrapTextByWidth] line: '${currentLine}', width: ${ctx.measureText(currentLine).width}, maxWidth: ${maxWidth}`);
+                    lines.push(currentLine);
+                    currentLine = text[i];
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            if (currentLine) {
+                console.log(`[wrapTextByWidth] line: '${currentLine}', width: ${ctx.measureText(currentLine).width}, maxWidth: ${maxWidth}`);
+                lines.push(currentLine);
+            }
+            return lines;
+        }
+        // --- 辅助函数：自适应字号 ---
+        function getAutoFontSize(text, maxWidth, maxHeight, fontFamily = 'sans-serif', minFontSize = 10, maxFontSize = 18) {
+            let fontSize = maxFontSize;
+            let lines;
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            while (fontSize >= minFontSize) {
+                lines = wrapTextByWidth(text, maxWidth, fontSize, fontFamily);
+                ctx.font = `${fontSize}px ${fontFamily}`;
+                let maxLineWidth = 0;
+                lines.forEach(line => {
+                    const w = ctx.measureText(line).width;
+                    if (w > maxLineWidth) maxLineWidth = w;
+                });
+                console.log(`[getAutoFontSize] fontSize: ${fontSize}, lines: ${lines.length}, maxLineWidth: ${maxLineWidth}, maxTextWidth: ${maxWidth}, totalHeight: ${lines.length * fontSize * 1.2}, maxTextHeight: ${maxHeight}`);
+                lines.forEach((line, i) => {
+                    console.log(`[getAutoFontSize]   line${i+1}: '${line}', width: ${ctx.measureText(line).width}`);
+                });
+                if (lines.length * fontSize * 1.2 <= maxHeight && maxLineWidth <= maxWidth) {
+                    return { fontSize, lines };
+                }
+                fontSize--;
+            }
+            // 最小字号也放不下时，强制返回
+            lines = wrapTextByWidth(text, maxWidth, minFontSize, fontFamily);
+            ctx.font = `${minFontSize}px ${fontFamily}`;
+            lines.forEach((line, i) => {
+                console.log(`[getAutoFontSize] (minFontSize) line${i+1}: '${line}', width: ${ctx.measureText(line).width}`);
+            });
+            return { fontSize: minFontSize, lines };
+        }
+        // ---
         state.nodes.forEach(node => {
             const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
             group.setAttribute('id', node.id);
@@ -107,17 +163,39 @@ export class Renderer {
             rect.setAttribute('stroke', 'var(--node-border-color)');
             rect.setAttribute('stroke-width', 2);
 
+            // --- 自适应字号与多行文本渲染 ---
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', config.node.width / 2);
             text.setAttribute('y', config.node.height / 2);
-            text.setAttribute('dy', '0.35em');
             text.setAttribute('text-anchor', 'middle');
             text.setAttribute('fill', 'var(--text-color)');
             text.style.pointerEvents = 'none';
-            text.textContent = node.label;
-
+            // 计算合适字号和分行内容
+            const padding = 12; // 节点内边距
+            const maxTextWidth = config.node.width - padding * 2;
+            const maxTextHeight = config.node.height - padding * 2;
+            const fontFamily = 'sans-serif';
+            const { fontSize, lines } = getAutoFontSize(node.label, maxTextWidth, maxTextHeight, fontFamily, 10, 18);
+            console.log(`[renderNodes] node: '${node.label}', fontSize: ${fontSize}, lines: ${lines.length}`);
+            lines.forEach((line, i) => {
+                console.log(`[renderNodes]   line${i+1}: '${line}'`);
+            });
+            text.setAttribute('font-size', fontSize);
+            const totalLines = lines.length;
+            lines.forEach((line, i) => {
+                const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                tspan.setAttribute('x', config.node.width / 2);
+                // 第一行居中，后续行向下偏移 1.2em
+                tspan.setAttribute('dy', i === 0 ? `${-((totalLines-1)/2)*1.2}em` : '1.2em');
+                tspan.textContent = line;
+                text.appendChild(tspan);
+            });
+            // --- title 悬浮提示 ---
+            const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+            title.textContent = node.label;
             group.appendChild(rect);
             group.appendChild(text);
+            group.appendChild(title);
 
             // Enhanced anchor points with better visibility
             const anchorPositions = [
