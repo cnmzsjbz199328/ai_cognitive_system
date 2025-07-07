@@ -101,7 +101,6 @@ export class Renderer {
             for (let i = 0; i < text.length; i++) {
                 testLine = currentLine + text[i];
                 if (ctx.measureText(testLine).width > maxWidth && currentLine !== '') {
-                    console.log(`[wrapTextByWidth] line: '${currentLine}', width: ${ctx.measureText(currentLine).width}, maxWidth: ${maxWidth}`);
                     lines.push(currentLine);
                     currentLine = text[i];
                 } else {
@@ -109,7 +108,6 @@ export class Renderer {
                 }
             }
             if (currentLine) {
-                console.log(`[wrapTextByWidth] line: '${currentLine}', width: ${ctx.measureText(currentLine).width}, maxWidth: ${maxWidth}`);
                 lines.push(currentLine);
             }
             return lines;
@@ -128,10 +126,6 @@ export class Renderer {
                     const w = ctx.measureText(line).width;
                     if (w > maxLineWidth) maxLineWidth = w;
                 });
-                console.log(`[getAutoFontSize] fontSize: ${fontSize}, lines: ${lines.length}, maxLineWidth: ${maxLineWidth}, maxTextWidth: ${maxWidth}, totalHeight: ${lines.length * fontSize * 1.2}, maxTextHeight: ${maxHeight}`);
-                lines.forEach((line, i) => {
-                    console.log(`[getAutoFontSize]   line${i+1}: '${line}', width: ${ctx.measureText(line).width}`);
-                });
                 if (lines.length * fontSize * 1.2 <= maxHeight && maxLineWidth <= maxWidth) {
                     return { fontSize, lines };
                 }
@@ -140,9 +134,6 @@ export class Renderer {
             // 最小字号也放不下时，强制返回
             lines = wrapTextByWidth(text, maxWidth, minFontSize, fontFamily);
             ctx.font = `${minFontSize}px ${fontFamily}`;
-            lines.forEach((line, i) => {
-                console.log(`[getAutoFontSize] (minFontSize) line${i+1}: '${line}', width: ${ctx.measureText(line).width}`);
-            });
             return { fontSize: minFontSize, lines };
         }
         // ---
@@ -184,10 +175,6 @@ export class Renderer {
             const maxTextHeight = config.node.height - padding * 2;
             const fontFamily = 'sans-serif';
             const { fontSize, lines } = getAutoFontSize(node.label, maxTextWidth, maxTextHeight, fontFamily, 10, 18);
-            console.log(`[renderNodes] node: '${node.label}', fontSize: ${fontSize}, lines: ${lines.length}`);
-            lines.forEach((line, i) => {
-                console.log(`[renderNodes]   line${i+1}: '${line}'`);
-            });
             text.setAttribute('font-size', fontSize);
             const totalLines = lines.length;
             lines.forEach((line, i) => {

@@ -1,29 +1,51 @@
 {
     "nodes": [
-        {
-            "id": "node_1",
-            "label": "Input A",
-            "position": { "x": 100, "y": 150 }
-        },
-        {
-            "id": "node_2",
-            "label": "Processing Core",
-            "position": { "x": 400, "y": 250 }
-        },
-        {
-            "id": "node_3",
-            "label": "Output X",
-            "position": { "x": 700, "y": 150 }
-        },
-        {
-            "id": "node_4",
-            "label": "Output Y",
-            "position": { "x": 700, "y": 350 }
-        }
+        { "id": "node_jose_arcadio_buendia", "label": "José Arcadio Buendía (Family Founder)", "position": { "x": -20, "y": -60 } },
+        { "id": "node_ursula_igaran", "label": "Úrsula Iguarán (Wife)", "position": { "x": -20, "y": 140 } },
+        { "id": "node_jose_arcadio", "label": "José Arcadio (Eldest Son)", "position": { "x": 340, "y": 40 } },
+        { "id": "node_aurora", "label": "Pilar Ternera (Mistress, Mother of Illegitimate Children)", "position": { "x": 340, "y": 400 } },
+        { "id": "node_aurora_son", "label": "Arcadio (Son of José Arcadio & Pilar)", "position": { "x": 640, "y": 300 } },
+        { "id": "node_aurora_son2", "label": "Aureliano José (Son of Aureliano & Pilar)", "position": { "x": 640, "y": 540 } },
+        { "id": "node_aurora_son3", "label": "Aureliano (The Colonel)", "position": { "x": 340, "y": 640 } },
+        { "id": "node_amarante", "label": "Amaranta (Daughter)", "position": { "x": 340, "y": 200 } },
+        { "id": "node_rebeca", "label": "Rebeca (Adopted Daughter)", "position": { "x": 340, "y": -140 } },
+        { "id": "node_aureliano_ii", "label": "Aureliano Segundo (One of the Twins)", "position": { "x": 980, "y": 140 } },
+        { "id": "node_jose_arcadio_ii", "label": "José Arcadio Segundo (One of the Twins)", "position": { "x": 980, "y": 420 } },
+        { "id": "node_fernanda", "label": "Fernanda del Carpio (Wife of Aureliano Segundo)", "position": { "x": 980, "y": -60 } },
+        { "id": "node_meme", "label": "Meme (Daughter)", "position": { "x": 1320, "y": 0 } },
+        { "id": "node_jose_arcadio_iii", "label": "José Arcadio (Third Generation)", "position": { "x": 1320, "y": -140 } },
+        { "id": "node_amarante_ursula", "label": "Amaranta Úrsula", "position": { "x": 1320, "y": 280 } },
+        { "id": "node_mauricio_babilonia", "label": "Mauricio Babilonia (Meme's Lover)", "position": { "x": 1320, "y": 120 } },
+        { "id": "node_aureliano_babilonia", "label": "Aureliano Babilonia (Son of Meme & Mauricio)", "position": { "x": 1640, "y": 40 } },
+        { "id": "node_final_aureliano", "label": "Aureliano (The Last One, Pig's Tail)", "position": { "x": 1920, "y": 280 } }
     ],
     "connections": [
-        { "id": "conn_1", "source": "node_1", "target": "node_2" },
-        { "id": "conn_2", "source": "node_2", "target": "node_3" },
-        { "id": "conn_3", "source": "node_2", "target": "node_4" }
-    ]
+        { "id": "conn_josearcadio_son", "source": "node_jose_arcadio_buendia", "target": "node_jose_arcadio", "label": "Father-Son" },
+        { "id": "conn_ursula_josearcadio", "source": "node_ursula_igaran", "target": "node_jose_arcadio", "label": "Mother-Son" },
+        { "id": "conn_aurora_son", "source": "node_aurora", "target": "node_aurora_son", "label": "Mother-Son" },
+        { "id": "conn_josearcadio_aurora_son", "source": "node_jose_arcadio", "target": "node_aurora_son", "label": "Father-Son" },
+        { "id": "conn_aureliano_aurora_son2", "source": "node_aurora", "target": "node_aurora_son2", "label": "Mother-Son" },
+        { "id": "conn_colonel_aurora_son2", "source": "node_aurora_son3", "target": "node_aurora_son2", "label": "Father-Son" },
+        { "id": "conn_jose_amarante", "source": "node_jose_arcadio_buendia", "target": "node_amarante", "label": "Father-Daughter" },
+        { "id": "conn_ursula_amarante", "source": "node_ursula_igaran", "target": "node_amarante", "label": "Mother-Daughter" },
+        { "id": "conn_jose_aureliano", "source": "node_jose_arcadio_buendia", "target": "node_aurora_son3", "label": "Father-Son" },
+        { "id": "conn_ursula_aureliano", "source": "node_ursula_igaran", "target": "node_aurora_son3", "label": "Mother-Son" },
+        { "id": "conn_jose_rebeca", "source": "node_jose_arcadio_buendia", "target": "node_rebeca", "label": "Adoptive Father" },
+        { "id": "conn_ursula_rebeca", "source": "node_ursula_igaran", "target": "node_rebeca", "label": "Adoptive Mother" },
+        { "id": "conn_aurora_son_aureliano2", "source": "node_aurora_son", "target": "node_aureliano_ii", "label": "Father-Son" },
+        { "id": "conn_aurora_son_josearcadio2", "source": "node_aurora_son", "target": "node_jose_arcadio_ii", "label": "Father-Son" },
+        { "id": "conn_aureliano2_meme", "source": "node_aureliano_ii", "target": "node_meme", "label": "Father-Daughter" },
+        { "id": "conn_fernanda_meme", "source": "node_fernanda", "target": "node_meme", "label": "Mother-Daughter" },
+        { "id": "conn_aureliano2_josearcadio3", "source": "node_aureliano_ii", "target": "node_jose_arcadio_iii", "label": "Father-Son" },
+        { "id": "conn_fernanda_josearcadio3", "source": "node_fernanda", "target": "node_jose_arcadio_iii", "label": "Mother-Son" },
+        { "id": "conn_aureliano2_amarante_ursula", "source": "node_aureliano_ii", "target": "node_amarante_ursula", "label": "Father-Daughter" },
+        { "id": "conn_fernanda_amarante_ursula", "source": "node_fernanda", "target": "node_amarante_ursula", "label": "Mother-Daughter" },
+        { "id": "conn_meme_aureliano_babilonia", "source": "node_meme", "target": "node_aureliano_babilonia", "label": "Mother-Son" },
+        { "id": "conn_mauricio_aureliano_babilonia", "source": "node_mauricio_babilonia", "target": "node_aureliano_babilonia", "label": "Father-Son" },
+        { "id": "conn_amarante_ursula_final_aureliano", "source": "node_amarante_ursula", "target": "node_final_aureliano", "label": "Mother-Son" },
+        { "id": "conn_aureliano_babilonia_final_aureliano", "source": "node_aureliano_babilonia", "target": "node_final_aureliano", "label": "Father-Son" }
+    ],
+    "transform": { "x": 65.38118061266448, "y": 233.66347142269737, "k": 0.7690590306332237 },
+    "theme": "dark",
+    "animationSpeed": 5
 } 
