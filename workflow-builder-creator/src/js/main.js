@@ -193,7 +193,7 @@ class App {
         const themeNames = {
             'dark': 'Dark',
             'light': 'Light',
-            'light-nogrid': 'Light (No Grid)'
+            'light-nogrid': 'NoGrid'
         };
         themeBtn.textContent = `${themeNames[state.theme]} Theme`;
         themeBtn.title = `Switch to ${themeNames[themes[(nextIndex + 1) % themes.length]]} Theme`;

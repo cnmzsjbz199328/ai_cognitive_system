@@ -34,9 +34,21 @@ export class DragHandler {
     move(e) {
         if (this.isDraggingNode && this.draggedNode) {
             this.interactionManager.updateNodePosition(e, this.draggedNode, this.offset);
+            // 实时渲染反馈
+            if (typeof this.interactionManager.renderOnce === 'function') {
+                this.interactionManager.renderOnce();
+            } else if (this.interactionManager.renderer && typeof this.interactionManager.renderer.render === 'function') {
+                this.interactionManager.renderer.render(this.state);
+            }
         } else if (this.isPanning) {
             this.state.transform.x = e.clientX - this.panStart.x;
             this.state.transform.y = e.clientY - this.panStart.y;
+            // 实时渲染反馈
+            if (typeof this.interactionManager.renderOnce === 'function') {
+                this.interactionManager.renderOnce();
+            } else if (this.interactionManager.renderer && typeof this.interactionManager.renderer.render === 'function') {
+                this.interactionManager.renderer.render(this.state);
+            }
         }
     }
 
@@ -49,5 +61,25 @@ export class DragHandler {
 
     isActive() {
         return this.isDraggingNode || this.isPanning;
+    }
+
+    // --- 触控支持 ---
+    touchStart(e) {
+        if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            this.start({ ...e, clientX: touch.clientX, clientY: touch.clientY });
+            e.preventDefault();
+        }
+    }
+    touchMove(e) {
+        if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            this.move({ ...e, clientX: touch.clientX, clientY: touch.clientY });
+            e.preventDefault();
+        }
+    }
+    touchEnd(e) {
+        this.end();
+        e.preventDefault();
     }
 } 

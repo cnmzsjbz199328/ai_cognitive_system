@@ -29,6 +29,9 @@ export class InteractionManager {
         document.addEventListener('keydown', (e) => this.keyboardHandler.handleKeyDown(e));
         this.renderer.svg.addEventListener('wheel', (e) => this.zoomHandler.handleWheel(e), { passive: false });
         this.renderer.svg.style.cursor = 'grab';
+        this.renderer.svg.addEventListener('touchstart', (e) => this.dragHandler.touchStart(e), { passive: false });
+        document.addEventListener('touchmove', (e) => this.dragHandler.touchMove(e), { passive: false });
+        document.addEventListener('touchend', (e) => this.dragHandler.touchEnd(e), { passive: false });
     }
 
     onMouseDown(e) {
