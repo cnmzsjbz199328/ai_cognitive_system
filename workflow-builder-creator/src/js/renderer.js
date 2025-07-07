@@ -63,6 +63,14 @@ export class Renderer {
     }
 
     updateGridPattern({ x, y, k }) {
+        // 检查是否为无网格亮色主题
+        const isNoGrid = document.documentElement.classList.contains('light-nogrid-theme');
+        if (isNoGrid) {
+            this.backgroundRect.setAttribute('fill', '#fff');
+            return;
+        } else {
+            this.backgroundRect.setAttribute('fill', 'url(#grid)');
+        }
         const gridPattern = this.svg.getElementById('grid');
         if (gridPattern) {
             const baseSize = 20;

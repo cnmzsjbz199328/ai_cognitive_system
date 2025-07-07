@@ -19,6 +19,7 @@ class App {
         this.lastFrameTime = 0;
         this.htmlEl = document.documentElement;
         this.autosaveTimer = null;
+        this.isRenderLoopActive = false;
     }
 
     async init() {
@@ -43,9 +44,18 @@ class App {
         document.getElementById('export-png-btn').addEventListener('click', () => this.dataHandler.exportToPNG(this.svg));
 
         // Animation Controls
-        document.getElementById('play-btn').addEventListener('click', () => this.animationManager.play());
-        document.getElementById('pause-btn').addEventListener('click', () => this.animationManager.pause());
-        document.getElementById('reset-btn').addEventListener('click', () => this.animationManager.reset());
+        document.getElementById('play-btn').addEventListener('click', () => {
+            this.animationManager.play();
+            this.startRenderLoop(true);
+        });
+        document.getElementById('pause-btn').addEventListener('click', () => {
+            this.animationManager.pause();
+            this.startRenderLoop(true);
+        });
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            this.animationManager.reset();
+            this.startRenderLoop(true);
+        });
         document.getElementById('speed-slider').addEventListener('input', (e) => this.setAnimationSpeed(e.target.value));
         document.getElementById('mode-btn').addEventListener('click', () => this.switchAnimationMode());
 
@@ -56,7 +66,12 @@ class App {
 
         // Set initial UI state from state object
         document.getElementById('speed-slider').value = state.animationSpeed;
-        this.htmlEl.classList.toggle('light-theme', state.theme === 'light');
+        this.htmlEl.classList.remove('light-theme', 'light-nogrid-theme');
+        if (state.theme === 'light') {
+            this.htmlEl.classList.add('light-theme');
+        } else if (state.theme === 'light-nogrid') {
+            this.htmlEl.classList.add('light-nogrid-theme');
+        }
     }
 
     addNodeAtCenter() {
@@ -66,6 +81,7 @@ class App {
             const centerX = (svgRect.width / 2 - state.transform.x) / state.transform.k;
             const centerY = (svgRect.height / 2 - state.transform.y) / state.transform.k;
             addNode(centerX - config.node.width / 2, centerY - config.node.height / 2, nodeLabel.trim());
+            this.renderOnce();
             this.scheduleAutosave();
         }
     }
@@ -77,6 +93,7 @@ class App {
             state.selectedNodeId = null;
             state.selectedNodes.clear();
             this.animationManager.reset();
+            this.renderOnce();
             this.scheduleAutosave();
         }
     }
@@ -88,8 +105,7 @@ class App {
         try {
             await this.dataHandler.loadFromFile(file);
             this.animationManager.reset();
-            // Force a re-render and UI update
-            this.updateUIFromState();
+            this.renderOnce();
             console.log('File loaded successfully.');
         } catch (error) {
             alert(error.message);
@@ -107,6 +123,7 @@ class App {
         state.transform.x = 0;
         state.transform.y = 0;
         state.transform.k = 1;
+        this.renderOnce();
     }
 
     fitToView() {
@@ -138,6 +155,7 @@ class App {
         state.transform.k = scale;
         state.transform.x = newX;
         state.transform.y = newY;
+        this.renderOnce();
     }
 
     switchAnimationMode() {
@@ -154,11 +172,32 @@ class App {
         if (state.animationMode !== 'particle' && state.animationMode !== 'minimal') {
             this.animationManager.reset();
         }
+        this.renderOnce();
     }
 
     toggleTheme() {
-        state.theme = state.theme === 'light' ? 'dark' : 'light';
-        this.htmlEl.classList.toggle('light-theme', state.theme === 'light');
+        // 支持 dark, light, light-nogrid 三种主题循环
+        const themes = ['dark', 'light', 'light-nogrid'];
+        const currentIndex = themes.indexOf(state.theme);
+        const nextIndex = (currentIndex + 1) % themes.length;
+        state.theme = themes[nextIndex];
+        // 移除所有主题类
+        this.htmlEl.classList.remove('light-theme', 'light-nogrid-theme');
+        if (state.theme === 'light') {
+            this.htmlEl.classList.add('light-theme');
+        } else if (state.theme === 'light-nogrid') {
+            this.htmlEl.classList.add('light-nogrid-theme');
+        }
+        // 按钮文本和 title
+        const themeBtn = document.getElementById('theme-btn');
+        const themeNames = {
+            'dark': 'Dark',
+            'light': 'Light',
+            'light-nogrid': 'Light (No Grid)'
+        };
+        themeBtn.textContent = `${themeNames[state.theme]} Theme`;
+        themeBtn.title = `Switch to ${themeNames[themes[(nextIndex + 1) % themes.length]]} Theme`;
+        this.renderOnce();
         this.scheduleAutosave();
     }
 
@@ -170,8 +209,14 @@ class App {
     }
     
     updateUIFromState() {
-        this.htmlEl.classList.toggle('light-theme', state.theme === 'light');
+        this.htmlEl.classList.remove('light-theme', 'light-nogrid-theme');
+        if (state.theme === 'light') {
+            this.htmlEl.classList.add('light-theme');
+        } else if (state.theme === 'light-nogrid') {
+            this.htmlEl.classList.add('light-nogrid-theme');
+        }
         document.getElementById('speed-slider').value = state.animationSpeed;
+        this.renderOnce();
     }
 
     setupResizeObserver() {
@@ -184,30 +229,43 @@ class App {
         const { width, height } = this.canvasContainer.getBoundingClientRect();
         this.svg.setAttribute('width', width);
         this.svg.setAttribute('height', height);
+        this.renderOnce();
     }
 
-    startRenderLoop() {
+    startRenderLoop(force = false) {
+        if (this.isRenderLoopActive && !force) return;
+        this.isRenderLoopActive = true;
         const loop = (currentTime) => {
             if (!this.lastFrameTime) {
                 this.lastFrameTime = currentTime;
             }
             const deltaTime = currentTime - this.lastFrameTime;
 
-            this.animationManager.update(deltaTime);
-            this.renderer.render(state, this.animationManager.particles);
-            
-            // A simple check to see if any user-driven state has changed
-            // This is a naive way to trigger autosave. A more robust solution might use a state management library.
-            const currentState = JSON.stringify({nodes: state.nodes, connections: state.connections, transform: state.transform});
-            if (this.lastSavedState !== currentState) {
-                this.lastSavedState = currentState;
-                this.scheduleAutosave();
+            // 只在动画播放时持续循环
+            if (this.animationManager.isPlaying) {
+                this.animationManager.update(deltaTime);
+                this.renderer.render(state, this.animationManager.particles);
+                // 自动保存逻辑
+                const currentState = JSON.stringify({nodes: state.nodes, connections: state.connections, transform: state.transform});
+                if (this.lastSavedState !== currentState) {
+                    this.lastSavedState = currentState;
+                    this.scheduleAutosave();
+                }
+                this.lastFrameTime = currentTime;
+                requestAnimationFrame(loop);
+            } else {
+                // 动画暂停时只渲染一次
+                this.renderer.render(state, this.animationManager.particles);
+                this.isRenderLoopActive = false;
+                this.lastFrameTime = 0;
             }
-
-            this.lastFrameTime = currentTime;
-            requestAnimationFrame(loop);
         };
         requestAnimationFrame(loop);
+    }
+
+    // 用户交互后手动渲染
+    renderOnce() {
+        this.renderer.render(state, this.animationManager.particles);
     }
 
     async loadData() {
@@ -226,6 +284,7 @@ class App {
             state.nodes = [];
             state.connections = [];
         }
+        this.renderOnce();
     }
 }
 

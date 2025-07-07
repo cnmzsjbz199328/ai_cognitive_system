@@ -23,6 +23,17 @@ html.light-theme {
     --grid-color: rgba(0, 0, 0, 0.08); /* Gray grid for light theme */
 }
 
+/* Light No Grid Theme */
+html.light-nogrid-theme {
+    --bg-color: #f0f2f5;
+    --canvas-bg-color: #ffffff;
+    --node-bg-color: #e9ecef;
+    --node-border-color: #ced4da;
+    --text-color: #343a40;
+    --connection-color: #adb5bd;
+    --grid-color: rgba(0,0,0,0); /* 彻底隐藏网格 */
+}
+
 body, html {
     margin: 0;
     padding: 0;
